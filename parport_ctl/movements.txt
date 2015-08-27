@@ -1,0 +1,191 @@
+origin(
+	first(
+		abs needle_z 0.0 2.0; (* needle up first! *)
+		abs needle_r 0.0 1.0
+	);
+	brakedwn(
+		abs brake_z 1.0 2.0 
+		(* move the brake down before rotating *)
+	); 
+	brakerot(
+		abs brake_r 0.0 1.0; 
+		abs gantry_y 6.0 2.0
+	); 
+	ned(
+		abs brake_z 0.0 1.0
+	); 
+	zed(
+		abs gantry_z 0.0 2.0
+	);
+	rest(
+		abs gantry_x 0.0 2.0
+	); 
+	resty(
+		abs gantry_y 0.0 2.0
+	);
+); 
+gantry_to_start(
+	ned(
+		abs needle_z 0.0 2.0
+	); 
+	doy(
+		abs gantry_y 4.0 5.0;
+		abs brake_z 1.0 1.0 (* brake down! *)
+	); 
+	dox(
+		abs gantry_x 18.19 10.0; 
+		abs brake_r 0.0 1.0
+	); 
+	doz(
+		abs gantry_z 0.0 8.0 (* up before back in !*)
+	);
+	doy2(
+		abs gantry_y 2.4 2.0
+	); 
+	dob(
+		abs brake_z 1.0 1.0; 
+		abs gantry_z -0.6 1.0
+	);
+);
+gantry_to_grab(
+	ned(
+		abs needle_z 0.0 5.0;
+		abs needle_r 0.0 5.0
+	); 
+	doy(
+		abs gantry_z 0.0 10.0; 
+		abs gantry_y 4.0 10.0;
+		abs brake_z 1.0 1.0; (* brake down! *)
+		abs brake_r 0.05 1.0 (* keep the brake from gitting the electrodes *)
+	); 
+	dox(
+		abs gantry_x Grab_x 5.0
+	); 
+	doy(
+		abs gantry_y Grab_y 5.0
+	); 
+	doz(
+		abs gantry_z (Grab_z + 0.13) 5.0
+	); 
+); 
+grab_advance_x(
+	rel gantry_x 0.06 1.0
+); 
+needle_up(
+	abs needle_z 0.0 2.0
+);
+needle_down(
+	abs needle_z 0.957 0.7
+);
+grab(
+	brake_round(
+		Grab_x = gantry_x; 
+		Grab_y = gantry_y; 
+		Grab_z = gantry_z; 
+		abs brake_r -0.02 1.0 
+		(* back off a little from calibration *)
+	); 
+	out_alittle(
+		rel gantry_y  0.28 0.13; (* 1.692 to 1.972 *)
+		rel gantry_z -0.39 0.28 (* -0.197 to -0.587 *)
+	); 
+	brake_up(
+		abs brake_z 0.0 1.0;
+		abs brake_r -0.005 0.1
+	); 
+	brake_touch(
+		abs brake_r 0.01 0.5
+	);
+);
+insert_save(
+	a(
+		Insertion_x = gantry_x; 
+		Insertion_y = gantry_y; 
+		Insertion_z = gantry_z
+	); 
+);
+peel_off(
+	first(
+		abs gantry_y (Grab_y + 1.2) 0.2;
+		abs gantry_z (Grab_z - 1.2) 0.2
+	); 
+	second(
+		abs gantry_y (Grab_y + 10.0) 7.7;
+		abs gantry_z (Grab_z - 13.0) 10.0
+	); 
+	third(
+		abs gantry_y (Grab_y + 5.0) 10.0 
+			(* need clearance from other electrodes *)
+	);
+);
+to_insertion(
+	alpha(
+		abs gantry_x (Insertion_x + 0.5) 7.0;
+		abs gantry_y (Insertion_y + 1.5) 7.0;
+		abs gantry_z (Insertion_z + 1.5) 7.0
+	); 
+	beta(
+		abs gantry_y Insertion_y 1.0;
+		abs gantry_z (Insertion_z + 0.0) 1.0
+	); 
+); 
+insert( 
+	uno(
+		abs brake_z 0.048 1.0; 
+		abs brake_r  -0.005 0.5
+	); 
+	duo(
+		abs needle_z 4.0 0.5; 
+		Insertion_x = gantry_x; 
+		Insertion_y = gantry_y; 
+		Insertion_z = gantry_z
+	); 
+); 
+release(
+	(* rotation propto insertion length? *)
+	(* maximum needle rotation rate is around 40 *)
+	(* 25-30 seems safe. *)
+	(*out( 
+		abs needle_r 3.0 3.0 (* p:3.0 v:3.0 this movement will be acceleration limited *)
+	);*) 
+	(* pull out the needle ! *)
+	withdraw(
+		abs needle_z 0.0 10.0
+		(* abs needle_r -15.0 3.0 *) (* p:-15.0 v:3.0 *)
+	);
+	(* move the brake out of the way. (~45 deg)*)
+	braker(
+		abs needle_r 0.0 20.0;
+		abs brake_r -0.11 0.5
+	); 
+	(* move the inserter away *)
+	away(
+		rel gantry_y 2.0 0.25 ;
+		rel gantry_z 2.0 0.25 ; 
+		abs brake_r -0.21 0.05
+	); 
+	(* move the inserter up! *)
+	upp(
+		abs gantry_z 0.0 10.0;
+		rel gantry_y 4.0 10.0
+	); 
+	(* move the brake back to default position *)
+	defbrot(
+		abs brake_r 0.0 1.0
+	); 
+	defbz(
+		abs brake_z 0.75 2.0
+		(*Insertion_x = Insertion_x + 0.5*)
+	); 
+); 
+rotate(
+	one(
+		abs needle_r 30.0 1.0
+	); 
+	two(
+		abs needle_r -30.0 1.0
+	); 
+	three(
+		abs needle_r 0.0 1.0
+	); 
+); 
