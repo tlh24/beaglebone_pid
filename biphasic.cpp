@@ -252,7 +252,7 @@ int main (int argc, char const *argv[])
 	float t = 0.f; 
 	float dr = 0.0; //drive command.
 	float v = 0.0;  //estimate of the velocity.
- 	float t_vold = 0.f; 
+ 	float t_vold = 0.0; 
 	timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR.
 	int x = eqep.getPosition() - fin;
 	int x_old = x; 
@@ -272,11 +272,12 @@ int main (int argc, char const *argv[])
 		motor_setDrive(dr); 
 	}
 	float v0 = v; 
-	float t_old = 0.f; 
+	float t_old = 0.0; 
 	float dr_int = 0.0; 
 	float dr_int2 = 0.0; 
 	float c = 0.0; 
 	int n = 0; 
+	t_vold = 0.0; 
 	timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR.
 	while(x > -1000 && v < 0.0){
 		t = get_time(); 
