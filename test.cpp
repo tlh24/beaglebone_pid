@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <errno.h>
+#include <math.h>
 
 #include "bbb-eqep.h"
 
@@ -32,12 +33,13 @@ using std::endl;
 using std::cerr;
 using namespace BBB;
 
+int	mem_fd; 
 uint16_t* pwm_addr = 0; 
 uint32_t* gpio_addr = 0; 
 uint32_t* timer_addr = 0; 
 
 //need to mmap the gpio registers as well. 
-void map_gpio1_register(int mem_fd){
+void map_gpio1_register(){
 	int masked_address = 0x4804c000 & ~(getpagesize()-1);
 	gpio_addr = (uint32_t*)mmap(NULL, PWM_BLOCK_LENGTH,
 		PROT_READ | PROT_WRITE, MAP_SHARED, mem_fd, masked_address);
@@ -51,7 +53,7 @@ void map_gpio1_register(int mem_fd){
 		masked_address);
 }
 
-void map_timer_register(int mem_fd){
+void map_timer_register(){
 	int masked_address = 0x48044000 & ~(getpagesize()-1);
 	timer_addr = (uint32_t*)mmap(NULL, PWM_BLOCK_LENGTH,
 		PROT_READ | PROT_WRITE, MAP_SHARED, mem_fd, masked_address);
@@ -78,13 +80,13 @@ void motor_stop(){
 	gpio_addr[0x190 / 4] = 0x1 << 19; //clear data out
 }
 void motor_setPWM(float duty){
-	pwm_addr[9] = (int)(duty * 50e3); 
+	pwm_addr[9] = (int)(duty * 20e3); 
 	//see setup.sh -- 20kHz PWM cycle. 
 }
 //simple step test, constant acceleration and deceleration. 
 //returns the desired position.
 float acc_seg(float d, float duration, float t){
-	float a = 8.f * d / (duration * duration); 
+	float a = 4.f * d / (duration * duration); 
 	if(t < duration / 2.f){
 		return 0.5f * a * t * t; 
 	}
@@ -95,13 +97,15 @@ float acc_seg(float d, float duration, float t){
 	}
 }
 float step_seg(float d, float duration, float t){
-	float u = duration / 3.f; 
+	float u = duration / 4.f; 
 	if(t < u){
-		return acc_seg(d, u, t); 
-	}else if(t < 2.f*u){
+		return 0; 
+	}else if(t < u*2.f){
+		return acc_seg(d, u, t-u); 
+	}else if(t < u*3.f){
 		return d; 
 	}else if(t < duration){
-		return acc_seg(-1.f*d, u, t - 2.f*u) + d; 
+		return acc_seg(-1.f*d, u, t - 3.f*u) + d; 
 	}else return 0; 
 }
 
@@ -110,12 +114,19 @@ float get_time(){
 	return (float)i / 24e6; //output in seconds.
 }
 
+void cleanup(){
+	motor_stop(); 
+	motor_setPWM(0.0); 
+	munmap(gpio_addr, PWM_BLOCK_LENGTH);
+	munmap(timer_addr, PWM_BLOCK_LENGTH);
+	close (mem_fd); 
+}
+
 int main (int argc, char const *argv[])
 {
 	struct timeval tv1, tv2;
 	int eqep_num;
 	uint32_t eqep_pos, eqep0_pos;
-	int mem_fd; 
 
 	if(argc < 2)
 	{
@@ -161,13 +172,13 @@ int main (int argc, char const *argv[])
 		return 1;
 	}
 
-	map_gpio1_register(mem_fd); 
+	map_gpio1_register(); 
 	printf("GPIO1_REV 0x%X\n", gpio_addr[0]); 
 	printf("GPIO1_OE 0x%X\n", gpio_addr[0x134 / 4]); 
 	printf("GPIO1_DI 0x%X\n", gpio_addr[0x138 / 4]); 
 	motor_forward(); 
 
-	map_timer_register(mem_fd); 
+	map_timer_register(); 
 	printf("TIMOER0_TIDR 0x%X\n", timer_addr[0]);
 	printf("TIMOER0_TIOCP_CFG 0x%X\n", timer_addr[0x10 / 4]);
 	printf("TIMOER0_TCLR 0x%X\n", timer_addr[0x38 / 4]); 
@@ -201,30 +212,74 @@ int main (int argc, char const *argv[])
 
 	//calc clock rate. 
 	printf("timer1 clock rate %f Mhz\n", (float)timer1_s / ((float)dt_micros)); 
+	motor_setPWM(0.01); 
+	motor_forward(); 
+	int sta = eqep.getPosition(); 
+	sleep(1); 
+	int dd = eqep.getPosition() - sta; 
+	if(dd < 0){
+	 printf("Motor polarity looks reversed, %d.  Check your wiring.\n", dd); 
+	 cleanup(); 
+	 return 0; 
+	}else{
+		printf("Motor forward direction looks OK.\n"); 
+	}
+	int fin = eqep.getPosition(); 
+	motor_reverse(); 
+	sta = eqep.getPosition(); 
+	sleep(1); 
+	dd = eqep.getPosition() - sta; 
+	if(dd > 0){
+	 printf("Motor polarity looks reversed, %d.  Check your wiring.\n", dd); 
+	 cleanup(); 
+	 return 0; 
+	}else{
+		printf("Motor reverse direction looks OK.\n"); 
+	}
+	sta = eqep.getPosition(); 
+	motor_stop(); 
+	sleep(1); 
 
 	//run PID loop.  
 	float t = 0.f; 
 	timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR.
 	motor_forward(); 
 	float oldcmd = 0.001; 
-	while(t < 4.f){
+	float integral = 0.f; 
+	int x_old = 0; 
+	float t_old = 0.f; 
+	float vel = 0.f; 
+	int n = 0; 
+	FILE* dat_fd = fopen("pid.dat", "w"); 
+	while(t < 1.f){
 		t = get_time(); 
-		float targ = step_seg(1000.f, 3.f, t); 
-		int x = eqep.getPosition();
-		float d = targ - (float)x; 
-		float newcmd = d * 0.01; // proportional.
+		float targ = step_seg((float)(fin-sta) * 0.5f, 0.075f, t); 
+		int x = eqep.getPosition() - sta;
+		float dt = t - t_old; 
+		t_old = t; 
+		float d = targ - (float)x;
+		float vel_ = (float)(x - x_old) / dt; 
+		x_old = x; 
+		//velocity filtering needs to be normalized to dt -- want the timeconstant to be about 2ms. 
+		float dtv = dt < 5e-4? dt : 5e-4; 
+		vel = vel_ + vel*(1.f - dtv / 5e-4); 
+		float dti = dt < 1e-3? dt : 1e-3; 
+		integral += d*(dti / 1e-3); //shorter integration timecostant.
+		integral = integral* (1.f - dt / 0.02);  //integration fadeconstant.
+		float newcmd = d * 0.06 + integral*1.5e-2 - vel * 1.5e-6; 
 		if(newcmd < 0.f && oldcmd >= 0.f) motor_reverse(); 
 		if(newcmd > 0.f && oldcmd <= 0.f) motor_forward();
-		float drive = newcmd > 0.1 ? 0.1 : newcmd; 
-		drive = drive < -0.1 ? -0.1 : drive; 
-		motor_setPWM(drive); 
+		float drive = newcmd > 50.f ? 50.f : newcmd; 
+		drive = drive < -50.f ? -50.f : drive; 
+		motor_setPWM(fabs(drive * 0.02)); 
 		oldcmd = newcmd; 
+		if(n % 100 == 0){
+			fprintf(dat_fd, "%f\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n", t, x, targ, d*0.06, integral*1.5e-2, vel*2.2e-6, newcmd, drive*20.f); 
+		}
+		n++; 
 	}
+	fclose(dat_fd); 
 
-	motor_stop(); 
-	printf("TIMOER0_TCRR 0x%X\n", timer_addr[0x3c / 4]);  //counter register. 
-	munmap(gpio_addr, PWM_BLOCK_LENGTH);
-	munmap(timer_addr, PWM_BLOCK_LENGTH);
-	close (mem_fd); 
+	cleanup(); 
 	return 0;
 }
