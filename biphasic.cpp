@@ -86,6 +86,7 @@ void motor_setPWM(float duty){
 void motor_setDrive(float dr){
 	if(dr < 0.0) motor_reverse(); 
 	if(dr > 0.0) motor_forward();
+	if(dr == 0.0) motor_stop(); 
 	motor_setPWM(fabs(dr)); 
 }
 //simple step test, constant acceleration and deceleration. 
@@ -192,9 +193,7 @@ int main (int argc, char const *argv[])
 	timer_addr[0x10 / 4] = 0xa; //1010, smart-idle, emufree, no reset.
 	timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR. 
 	timer_addr[0x38 / 4] = 0x3 ; //0000 0000 0000 0011
-	printf("TIMOER0_TCRR 0x%X\n", timer_addr[0x3c / 4]);  //counter register. 
-	eqep0_pos = eqep;
-
+	
 	//time a read-loop to assess speed
 	int num_reads = 1000000;
 	int i;
@@ -202,8 +201,8 @@ int main (int argc, char const *argv[])
 	for(i=0;i<num_reads;i++){
 		eqep_pos = eqep.getPosition();
 	}
-	gettimeofday(&tv2,NULL);
 	int timer1_s = timer_addr[0x3c / 4]; 
+	gettimeofday(&tv2,NULL);
 
 	//find difference between start and end time
 	unsigned long dt_micros = (1000000 * tv2.tv_sec + tv2.tv_usec)-(1000000 * tv1.tv_sec + tv1.tv_usec);
@@ -250,63 +249,98 @@ int main (int argc, char const *argv[])
 	//try a negative step ('up')
 	//full-speed acceleration to midpoint of trajectory. 
 	float t = 0.f; 
+	float td = 0.0; 
+	int x = 0; 
+	int x_old = 0; 
 	float dr = 0.0; //drive command.
 	float v = 0.0;  //estimate of the velocity.
- 	float t_vold = 0.0; 
-	timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR.
-	int x = eqep.getPosition() - fin;
-	int x_old = x; 
-	while(x > -500){
-		dr = -0.1; 
-		t = get_time(); 
-		x = eqep.getPosition() - fin;
-		if(x != x_old){
-			//update the velocity. 
-			float dt_ = t - t_vold;
-			float v_ = (float)(x - x_old) / dt_; 
-			v = 0.1*v_ + 0.9 * v; //simple fading-memory filter 
-				//(with shorter timecostant at high speed)
-			t_vold = t; 
-			x_old = x;
-		}
-		motor_setDrive(dr); 
-	}
-	float v0 = v; 
+	float v_ = 0.0; //instantaneous velocity.
 	float t_old = 0.0; 
+ 	float t_vold = 0.0; 
+ 	float v0 = 0.0; 
 	float dr_int = 0.0; 
 	float dr_int2 = 0.0; 
-	float c = 0.0; 
+	float c = 1e9; 
 	int n = 0; 
-	t_vold = 0.0; 
-	timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR.
-	while(x > -1000 && v < 0.0){
+	auto update_velocity = [&] (int nn, float lerp) -> void {
 		t = get_time(); 
 		x = eqep.getPosition() - fin;
-		if(x != x_old){
-			//update the velocity. 
-			float dt_ = t - t_vold;
-			float v_ = (float)(x - x_old) / dt_; 
-			v = 0.1*v_ + 0.9*v; //simple fading-memory filter 
-				//(with shorter timecostant at high speed)
+		if(nn == 0){
+			x_old = x; 
 			t_vold = t; 
-			x_old = x;
+		}else{
+			if(x != x_old){
+				//update the velocity. 
+				float dt_ = t - t_vold;
+				v_ = (float)(x - x_old) / dt_; 
+				v = lerp*v_ + (1.0 - lerp)*v; //simple fading-memory filter 
+					//(with shorter timecostant at high speed)
+				t_vold = t; 
+				x_old = x;
+			}
 		}
-		//numerically integrate the drive (piecewise flat)
-		float dt = t - t_old; t_old = t; 
-		dr_int += dr * dt; 
-		dr_int2 = dr_int * dt; 
-		float c_ = (x - v0*t) / dr_int2; 
-		c = c*0.99 + c_*0.01; 
-		// update the initial velocity, too. 
-		float v0_ = v - c * dr_int; 
-		v0 = v0*0.99 + v0_*0.01;
-		dr = 0.1; 
-		motor_setDrive(dr); 
-		if(n % 1 == 0){
-			fprintf(dat_fd, "%f\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n", 
-					  t, x, v, dr_int, dr_int2, c, v0, dr); 
+	};
+	auto print_dat = [&] (int nn) -> void {
+		if(nn % 1 == 0){
+			fprintf(dat_fd, "%e\t%d\t%e\t%e\t%e\n", 
+					  t, x, v, v_, dr); 
 		}
-		n++; 
+	};
+	for(int j=0; j<14; j++){
+		timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR.
+		//this may take a little bit ...
+		n=0; 
+		// compress the spring. 
+		t = get_time(); 
+		printf("start time %f\n", t); //dummy wait / syscall.
+		t = get_time(); 
+		update_velocity(0, 0.0); 
+		while(t < 0.005 && n < 800){ //maximum excursion is about 340 steps.
+			update_velocity(n, 0.1); 
+			dr = 1.0; 
+			motor_setDrive(dr); 
+			print_dat(n); 
+			n++; 
+		}
+		while(x > -1400+100*j && t < 0.015 && n < 1800){
+			update_velocity(n, 0.1); 
+			if(x > -250+20*j)
+				dr = -1.0;
+			else dr = -0.03; 
+			motor_setDrive(dr); 
+			print_dat(n); 
+			n++; 
+		}
+		v0 = v; 
+		while(v <= -45*200 && t < 0.04 && n < 5000){
+			//really should be braking based on positon 
+			//(as well as velocity, maybe)
+			// to get more accurate halt position.
+			update_velocity(n, 0.2); 
+			if(v < -300*200)
+				dr = 0.06; 
+			else 
+				dr = 0.018; 
+			motor_setDrive(dr); 
+			print_dat(n); 
+			n++; 
+		}
+		//record a bit of data at the end. 
+		t = td = get_time(); 
+		while(t-td < 0.07 && n < 10000){
+			update_velocity(n, 0.1); 
+			dr = -0.004; 
+			motor_setDrive(dr); 
+			print_dat(n); 
+			n++; 
+		}
+		//reset motor positon. 
+		motor_setDrive(-0.006); 
+		sleep(1); 
+		motor_setDrive(0.015); 
+		sleep(1); 
+		fin = eqep.getPosition(); //bottom of cylinder, retract. 
+		printf("fin %d\n", fin); 
 	}
 	fclose(dat_fd); 
 

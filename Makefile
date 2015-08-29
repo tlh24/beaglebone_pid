@@ -5,7 +5,7 @@ OBJS = bbb-eqep.o biphasic.o
 all: pid_tst
 
 %.o:%.cpp
-	g++ -c -O2 -o $@ $<
+	g++ -std=c++11 -c -O2 -o $@ $<
 	
 pid_tst: $(OBJS)
 	g++ -o pid_tst $(OBJS)
