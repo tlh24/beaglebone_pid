@@ -286,7 +286,7 @@ int main (int argc, char const *argv[])
 					  t, x, v, v_, dr); 
 		}
 	};
-	for(int j=0; j<14; j++){
+	for(int j=0; j<1; j++){
 		timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR.
 		//this may take a little bit ...
 		n=0; 
