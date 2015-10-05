@@ -274,7 +274,7 @@ int main (int argc, char const *argv[])
 				float dt_ = t - t_vold;
 				v_ = (float)(x - x_old) / dt_; 
 				v = lerp*v_ + (1.0 - lerp)*v; //simple fading-memory filter 
-					//(with shorter timecostant at high speed)
+					//(with shorter timeconstant at high speed)
 				t_vold = t; 
 				x_old = x;
 			}
@@ -294,42 +294,24 @@ int main (int argc, char const *argv[])
 		t = get_time(); 
 		printf("start time %f\n", t); //dummy wait / syscall.
 		t = get_time(); 
-		update_velocity(0, 0.0); 
-		while(t < 0.005 && n < 800){ //maximum excursion is about 340 steps.
-			update_velocity(n, 0.1); 
-			dr = 1.0; 
-			motor_setDrive(dr); 
-			print_dat(n); 
-			n++; 
-		}
-		while(x > -1400+100*j && t < 0.015 && n < 1800){
-			update_velocity(n, 0.1); 
-			if(x > -250+20*j)
-				dr = -1.0;
-			else dr = -0.03; 
-			motor_setDrive(dr); 
-			print_dat(n); 
-			n++; 
-		}
-		v0 = v; 
-		while(v <= -45*200 && t < 0.04 && n < 5000){
-			//really should be braking based on positon 
-			//(as well as velocity, maybe)
-			// to get more accurate halt position.
-			update_velocity(n, 0.2); 
-			if(v < -300*200)
-				dr = 0.06; 
-			else 
-				dr = 0.018; 
-			motor_setDrive(dr); 
-			print_dat(n); 
-			n++; 
-		}
-		//record a bit of data at the end. 
-		t = td = get_time(); 
-		while(t-td < 0.07 && n < 10000){
-			update_velocity(n, 0.1); 
-			dr = -0.004; 
+		update_velocity(0, 0.0);
+		while(t < 0.1){
+			update_velocity(n, 0.1);
+			
+			if(t < 0.008){
+				dr = 1.0; //compress the spring down
+			}else if(t < 0.016 || x > -1000){
+				if(x > -300)
+				dr = -1.0; //drive up
+				else dr = -0.03; //coast up
+			}else if(t < 0.030){
+				if(v < -300*200)
+					dr = 0.06; //decelerate down
+				else 
+					dr = 0.018; // decelerate less
+			}else{
+				dr = -0.004; //hold (up)
+			}
 			motor_setDrive(dr); 
 			print_dat(n); 
 			n++; 
