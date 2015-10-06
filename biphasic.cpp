@@ -244,8 +244,7 @@ int main (int argc, char const *argv[])
 	motor_forward(); 
 	sleep(1); 
 	fin = eqep.getPosition(); //bottom of cylinder, retract. 
-
-	FILE* dat_fd = fopen("pid.dat", "w"); 
+	
 	//try a negative step ('up')
 	//full-speed acceleration to midpoint of trajectory. 
 	float t = 0.f; 
@@ -262,6 +261,9 @@ int main (int argc, char const *argv[])
 	float dr_int2 = 0.0; 
 	float c = 1e9; 
 	int n = 0; 
+	float* sav = (float*)malloc(sizeof(float) * 5 * 1e6); 
+		//20MB .. should be more than enough. 
+	int savn = 0; 
 	auto update_velocity = [&] (int nn, float lerp) -> void {
 		t = get_time(); 
 		x = eqep.getPosition() - fin;
@@ -280,11 +282,13 @@ int main (int argc, char const *argv[])
 			}
 		}
 	};
-	auto print_dat = [&] (int nn) -> void {
-		if(nn % 1 == 0){
-			fprintf(dat_fd, "%e\t%d\t%e\t%e\t%e\n", 
-					  t, x, v, v_, dr); 
-		}
+	auto save_dat = [&] (int nn) -> void {
+		sav[savn*5+0] = t; 
+		sav[savn*5+1] = (float)x; 
+		sav[savn*5+2] = v; 
+		sav[savn*5+3] = v_; 
+		sav[savn*5+4] = dr; 
+		savn++; 
 	};
 	for(int j=0; j<1; j++){
 		timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR.
@@ -313,7 +317,7 @@ int main (int argc, char const *argv[])
 				dr = -0.004; //hold (up)
 			}
 			motor_setDrive(dr); 
-			print_dat(n); 
+			save_dat(n); 
 			n++; 
 		}
 		//reset motor positon. 
@@ -324,7 +328,15 @@ int main (int argc, char const *argv[])
 		fin = eqep.getPosition(); //bottom of cylinder, retract. 
 		printf("fin %d\n", fin); 
 	}
+	FILE* dat_fd = fopen("pid.dat", "w"); 
+	for(int j=0; j<savn; j++){
+			for(int k=0; k<5; k++){
+				fprintf(dat_fd, "%e\t", sav[j*5+k]); 
+			fprintf(dat_fd, "\n"); 
+		}
+	};
 	fclose(dat_fd); 
+	free(sav); 
 
 	cleanup(); 
 	return 0;
