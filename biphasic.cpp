@@ -154,7 +154,8 @@ int main (int argc, char const *argv[])
 	//enable l4ls_glck, so that we may access epwmss peripherals. 
 	// (though ... it seems to be already enabled )
 	printf("CM_PER_L4LS_CLKCTRL = 0x%x\n", prcm_addr[0x60 / 4]); 
-	prcm_addr[0x88 / 4] = 0x2; 
+	prcm_addr[0x88 / 4] = 0x2; //enable timer4. 
+	prcm_addr[0xd4 / 4] = 0x2; //enable epwmss0. 
 	printf("CM_PER_L4LS_CLKSTCTRL = 0x%x\n", prcm_addr[0]); 
 	
 	printf("mapping control register...\n"); 	
