@@ -48,7 +48,7 @@ eQEP_address_(eQEP_address)
   eQEPFd = open("/dev/mem", O_RDWR | O_SYNC);
   if (eQEPFd < 0)
   {
-    debug(0, "eQEP class: Can't open /dev/mem\n");
+    printf("eQEP class: Can't open /dev/mem\n");
     return;
   }
   
@@ -57,7 +57,7 @@ eQEP_address_(eQEP_address)
   eqep_addr = pwm_addr + (eQEP_address_ & (getpagesize()-1));
   position_p = (uint32_t *) (eqep_addr + EQEP_QPOSCNT);
   
-  debug(2, "eQEP successfully activated\n");
+  printf("eQEP successfully activated\n");
   defaultSettings();
   active = true;
 }

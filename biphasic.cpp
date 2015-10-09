@@ -61,7 +61,7 @@ void map_timer_register(){
 	timer_addr = map_register(0x48044000); 
 }
 void map_control_register(){ 
-	control_addr = map_register(0x44e10800); 
+	control_addr = map_register(0x44e10000); //see page 180 in the TRM.
 } 
 
 void motor_forward(){
