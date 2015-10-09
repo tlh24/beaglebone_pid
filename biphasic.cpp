@@ -69,7 +69,7 @@ void map_pwmss_register(){
 	pwmss_addr = map_register(0x48300000, 0x1000); //see page 180 in the TRM.
 } 
 void map_prcm_register(){ 
-	prcm_addr = map_register(0x44e0000, 0x1000); //CM_PER module. 
+	prcm_addr = map_register(0x44e00000, 0x1000); //CM_PER module. 
 } 
 
 void motor_forward(){
