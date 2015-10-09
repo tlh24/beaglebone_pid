@@ -29,7 +29,7 @@
 				0x04c  0x2F /* again, to be output. Mode 7, RxActive */
 			>;
 			}; 
-		}
+		};
 	};
 	fragment@1 {
 		target = <&ocp>;
