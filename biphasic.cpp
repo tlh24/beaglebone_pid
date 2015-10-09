@@ -38,6 +38,7 @@ uint16_t* pwm_addr = 0;
 uint32_t* gpio_addr = 0; 
 uint32_t* timer_addr = 0; 
 uint32_t* control_addr = 0; 
+uint32_t* pwmss_addr = 0; 
 
 //need to mmap the gpio registers as well. 
 uint32_t* map_register(uint32_t base_addr, uint32_t len){
@@ -62,6 +63,9 @@ void map_timer_register(){
 }
 void map_control_register(){ 
 	control_addr = map_register(0x44e10000, 0x1000); //see page 180 in the TRM.
+} 
+void map_pwmss_register(){ 
+	pwmss_addr = map_register(0x48300000, 0x1000); //see page 180 in the TRM.
 } 
 
 void motor_forward(){
@@ -123,6 +127,7 @@ void cleanup(){
 	munmap(gpio_addr, 0x200);
 	munmap(timer_addr, 0x200);
 	munmap(control_addr, 0x1000); 
+	munmap(pwmss_addr, 0x1000); 
 	close (mem_fd); 
 }
 
@@ -162,6 +167,11 @@ int main (int argc, char const *argv[])
 	timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR. 
 	timer_addr[0x38 / 4] = 0x3 ; //0000 0000 0000 0011
 	
+	map_pwmss_register(); 
+	printf("EPWMSS0_IDVER 0x%X\n", pwmss_addr[0]);
+	printf("EPWMSS0_SYSCFG 0x%X\n", pwmss_addr[1]);
+	printf("EPWMSS0_CLKCFG 0x%X\n", pwmss_addr[2]);
+	printf("EPWMSS0_CLKSTAT 0x%X\n", pwmss_addr[3]);
   
 	printf("accessing eQEP0...\n"); 
 	eQEP eqep(0);

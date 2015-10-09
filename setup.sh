@@ -38,4 +38,5 @@ echo out > /sys/class/gpio/gpio51/direction
 
 #turn on timer1. (timer0 is the 32kHz RTC)
 echo on > /sys/devices/ocp.3/48044000.timer/power/control
-# this is used for high-speed internal interval timing. 
+# timer is used for high-speed internal interval timing. 
+echo on > /sys/devices/ocp.3/4804c000.gpio/power/control
