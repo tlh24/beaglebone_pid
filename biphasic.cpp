@@ -163,8 +163,8 @@ int main (int argc, char const *argv[])
 		printf(" .. looks OK\n"); 
 	control_addr[0x950 / 4] = 0x3; //pulldown, mux mode 3, fast slew, rx inactive. 
 	printf("pin 84 0x%X\n", control_addr[0x950 / 4]);
-	printf("pwmss_ctrl 0x%X", control_addr[0x644 / 4]);
 	control_addr[0x644 / 4] = 0x7;
+	printf("pwmss_ctrl 0x%X\n", control_addr[0x644 / 4]);
 
 	map_gpio1_register(); 
 	printf("GPIO1_REV 0x%X\n", gpio_addr[0]); 
