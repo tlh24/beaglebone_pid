@@ -39,6 +39,7 @@ uint32_t* gpio_addr = 0;
 uint32_t* timer_addr = 0; 
 uint32_t* control_addr = 0; 
 uint32_t* pwmss_addr = 0; 
+uint32_t* prcm_addr = 0; 
 
 //need to mmap the gpio registers as well. 
 uint32_t* map_register(uint32_t base_addr, uint32_t len){
@@ -51,7 +52,7 @@ uint32_t* map_register(uint32_t base_addr, uint32_t len){
 		printf("ERROR: (errno %d)\n", errno);
 		return 0;
 	}
-	printf("gpio at address 0x%08x mapped\n",
+	printf("peripherals at address 0x%08x mapped\n",
 		masked_address);
 	return addr; 
 }
@@ -66,6 +67,9 @@ void map_control_register(){
 } 
 void map_pwmss_register(){ 
 	pwmss_addr = map_register(0x48300000, 0x1000); //see page 180 in the TRM.
+} 
+void map_prcm_register(){ 
+	prcm_addr = map_register(0x44e0000, 0x1000); //CM_PER module. 
 } 
 
 void motor_forward(){
@@ -128,6 +132,7 @@ void cleanup(){
 	munmap(timer_addr, 0x200);
 	munmap(control_addr, 0x1000); 
 	munmap(pwmss_addr, 0x1000); 
+	munmap(prcm_addr, 0x1000); 
 	close (mem_fd); 
 }
 
@@ -143,6 +148,10 @@ int main (int argc, char const *argv[])
 		printf("Can't open /dev/mem\n");
 		return 1;
 	}
+	
+	map_prcm_register(); 
+	printf("CM_PER_L4LS_CLKSTCTRL = 0x%x\n", prcm_addr[0]); 
+	
 	printf("mapping control register...\n"); 	
 	map_control_register(); 
 	printf("device_id 0x%X", control_addr[0x600 / 4]);
