@@ -5,10 +5,10 @@ OBJS = bbb-eqep.o biphasic.o
 all: pid_tst
 
 %.o:%.cpp
-	g++-4.7 -std=c++11 -c -O2 -o $@ $<
+	g++ -std=c++11 -c -O2 -o $@ $<
 	
 pid_tst: $(OBJS)
-	g++-4.7 -o pid_tst $(OBJS)
+	g++ -o pid_tst $(OBJS)
 
 # BB-pid0-00A0.dtbo: BB-pid0-00A0.dts
 # 	dtc -O dtb -b 0 $< -o $@

@@ -37,35 +37,32 @@ int	mem_fd;
 uint16_t* pwm_addr = 0; 
 uint32_t* gpio_addr = 0; 
 uint32_t* timer_addr = 0; 
+uint32_t* control_addr = 0; 
 
 //need to mmap the gpio registers as well. 
-void map_gpio1_register(){
-	int masked_address = 0x4804c000 & ~(getpagesize()-1);
-	gpio_addr = (uint32_t*)mmap(NULL, PWM_BLOCK_LENGTH,
+uint32_t* map_register(uint32_t base_addr){
+	int masked_address = base_addr & ~(getpagesize()-1);
+	uint32_t* addr = (uint32_t*)mmap(NULL, PWM_BLOCK_LENGTH,
 		PROT_READ | PROT_WRITE, MAP_SHARED, mem_fd, masked_address);
-	if (gpio_addr == MAP_FAILED )
+	if (addr == MAP_FAILED )
 	{
 		printf("Memory Mapping failed for 0x%04x register\n", masked_address);
 		printf("ERROR: (errno %d)\n", errno);
-		return;
+		return 0;
 	}
 	printf("gpio at address 0x%08x mapped\n",
 		masked_address);
+	return addr; 
 }
-
+void map_gpio1_register(){
+	gpio_addr = map_register(0x4804c000); 
+}
 void map_timer_register(){
-	int masked_address = 0x48044000 & ~(getpagesize()-1);
-	timer_addr = (uint32_t*)mmap(NULL, PWM_BLOCK_LENGTH,
-		PROT_READ | PROT_WRITE, MAP_SHARED, mem_fd, masked_address);
-	if (timer_addr == MAP_FAILED )
-	{
-		printf("Memory Mapping failed for 0x%04x register\n", masked_address);
-		printf("ERROR: (errno %d)\n", errno);
-		return;
-	}
-	printf("timer at address 0x%08x mapped\n",
-		masked_address);
+	timer_addr = map_register(0x48044000); 
 }
+void map_control_register(){ 
+	control_addr = map_register(0x44e10800); 
+} 
 
 void motor_forward(){
 	gpio_addr[0x190 / 4] = 0x1 << 19; //clear data out
@@ -177,6 +174,9 @@ int main (int argc, char const *argv[])
 		printf("Can't open /dev/mem\n");
 		return 1;
 	}
+	
+	map_control_register(); 
+	control_addr[0x950 / 4] = 0x3; //pulldown, mux mode 3, fast slew, rx inactive. 
 
 	map_gpio1_register(); 
 	printf("GPIO1_REV 0x%X\n", gpio_addr[0]); 
