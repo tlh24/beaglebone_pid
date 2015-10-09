@@ -23,7 +23,7 @@
 	/* state the resources this cape uses */
 	exclusive-use =
 		/* the pin header uses */
-		"P9.27",	/* eqep0 */
+		"P9.24",	/* eqep0 */
 		"P9.26",	/* can1_tx */
 		/* the hardware ip uses */
 		"dcan1";
@@ -33,7 +33,7 @@
 		__overlay__ {
 			bb_dcan1_pins: pinmux_dcan1_pins {
 				pinctrl-single,pins = <
-					BONE_P9_27 (PIN_INPUT_PULLDOWN | MUX_MODE1) /* uart1_txd.d_can1_rx */
+					BONE_P9_24 (PIN_INPUT_PULLDOWN | MUX_MODE1) /* uart1_txd.d_can1_rx */
 					BONE_P9_26 (PIN_OUTPUT_PULLUP | MUX_MODE2) /* uart1_rxd.d_can1_tx */
 				>;
 			};

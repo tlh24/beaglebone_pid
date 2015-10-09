@@ -145,6 +145,7 @@ int main (int argc, char const *argv[])
 		return 1;
 	}
   
+	printf("accessing eQEP0...\n"); 
 	eQEP eqep(eqep_num);
 	printf("base address (mmaped) 0x%X\n", eqep.getPWMSSPointer()); 
 	printf("SYSCONFIG 0x%X\n", *(uint32_t*)(eqep.getPWMSSPointer() + PWM_SYSCONFIG));
@@ -174,7 +175,8 @@ int main (int argc, char const *argv[])
 		printf("Can't open /dev/mem\n");
 		return 1;
 	}
-	
+
+	printf("mapping control register...\n"); 	
 	map_control_register(); 
 	control_addr[0x950 / 4] = 0x3; //pulldown, mux mode 3, fast slew, rx inactive. 
 
