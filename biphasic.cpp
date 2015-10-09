@@ -144,6 +144,7 @@ int main (int argc, char const *argv[])
 	if(control_addr[0x600 / 4] == 0x2b94402e) 
 		printf(" .. looks OK\n"); 
 	control_addr[0x950 / 4] = 0x3; //pulldown, mux mode 3, fast slew, rx inactive. 
+	printf("pin 84 0x%X", control_addr[0x950 / 4]);
 
 	map_gpio1_register(); 
 	printf("GPIO1_REV 0x%X\n", gpio_addr[0]); 
