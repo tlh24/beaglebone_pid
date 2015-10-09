@@ -153,7 +153,8 @@ int main (int argc, char const *argv[])
 	printf("CM_PER_L4LS_CLKSTCTRL = 0x%x\n", prcm_addr[0]); 
 	prcm_addr[0] |= 0x1 << 8; 
 	//enable l4ls_glck, so that we may access epwmss peripherals. 
-	printf("CM_PER_L4LS_CLKSTCTRL = 0x%x\n", prcm_addr[0]); 
+	// (though ... it seems to be already enabled )
+	printf("CM_PER_L4LS_CLKCTRL = 0x%x\n", prcm_addr[0x60 / 4]); 
 	
 	printf("mapping control register...\n"); 	
 	map_control_register(); 
