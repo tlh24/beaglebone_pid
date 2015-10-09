@@ -144,7 +144,7 @@ int main (int argc, char const *argv[])
 	if(control_addr[0x600 / 4] == 0x2b94402e) 
 		printf(" .. looks OK\n"); 
 	control_addr[0x950 / 4] = 0x3; //pulldown, mux mode 3, fast slew, rx inactive. 
-	printf("pin 84 0x%X", control_addr[0x950 / 4]);
+	printf("pin 84 0x%X\n", control_addr[0x950 / 4]);
 
 	map_gpio1_register(); 
 	printf("GPIO1_REV 0x%X\n", gpio_addr[0]); 
@@ -162,7 +162,6 @@ int main (int argc, char const *argv[])
 	timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR. 
 	timer_addr[0x38 / 4] = 0x3 ; //0000 0000 0000 0011
 	
-	return 0; 
   
 	printf("accessing eQEP0...\n"); 
 	eQEP eqep(0);
