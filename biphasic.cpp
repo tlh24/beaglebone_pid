@@ -151,7 +151,7 @@ int main (int argc, char const *argv[])
 	
 	map_prcm_register(); 
 	printf("CM_PER_L4LS_CLKSTCTRL = 0x%x\n", prcm_addr[0]); 
-	prcm_addr[0] |= 0x1 << 8; 
+	prcm_addr[0] = 0x1b3bed00; 
 	//enable l4ls_glck, so that we may access epwmss peripherals. 
 	// (though ... it seems to be already enabled )
 	printf("CM_PER_L4LS_CLKCTRL = 0x%x\n", prcm_addr[0x60 / 4]); 
