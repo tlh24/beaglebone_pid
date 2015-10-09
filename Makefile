@@ -10,12 +10,12 @@ all: pid_tst
 pid_tst: $(OBJS)
 	g++-4.7 -o pid_tst $(OBJS)
 
-BB-pid0-00A0.dtbo: BB-pid0-00A0.dts
-	dtc -O dtb -b 0 $< -o $@
-
-install: BB-pid0-00A0.dtbo
-	sudo cp $< /lib/firmware
-	echo "echo BB-pid0 > /sys/devices/platform/bone_capemgr/slots"
+# BB-pid0-00A0.dtbo: BB-pid0-00A0.dts
+# 	dtc -O dtb -b 0 $< -o $@
+# 
+# install: BB-pid0-00A0.dtbo
+# 	sudo cp $< /lib/firmware
+# 	echo "echo BB-pid0 > /sys/devices/platform/bone_capemgr/slots"
 	
 BB-PWM2-00A0.dtbo: BB-PWM2-00A0.dts
 	dtc -O dtb -b 0 $< -o $@
