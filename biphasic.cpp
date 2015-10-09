@@ -140,6 +140,7 @@ int main (int argc, char const *argv[])
 	}
 	printf("mapping control register...\n"); 	
 	map_control_register(); 
+	printf("device_id 0x%X\n", control_addr[0x600 / 4]);
 	control_addr[0x950 / 4] = 0x3; //pulldown, mux mode 3, fast slew, rx inactive. 
 
 	map_gpio1_register(); 
