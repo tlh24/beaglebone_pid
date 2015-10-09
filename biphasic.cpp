@@ -40,9 +40,9 @@ uint32_t* timer_addr = 0;
 uint32_t* control_addr = 0; 
 
 //need to mmap the gpio registers as well. 
-uint32_t* map_register(uint32_t base_addr){
+uint32_t* map_register(uint32_t base_addr, uint32_t len){
 	int masked_address = base_addr & ~(getpagesize()-1);
-	uint32_t* addr = (uint32_t*)mmap(NULL, PWM_BLOCK_LENGTH,
+	uint32_t* addr = (uint32_t*)mmap(NULL, len,
 		PROT_READ | PROT_WRITE, MAP_SHARED, mem_fd, masked_address);
 	if (addr == MAP_FAILED )
 	{
@@ -55,13 +55,13 @@ uint32_t* map_register(uint32_t base_addr){
 	return addr; 
 }
 void map_gpio1_register(){
-	gpio_addr = map_register(0x4804c000); 
+	gpio_addr = map_register(0x4804c000, 0x200); 
 }
 void map_timer_register(){
-	timer_addr = map_register(0x48044000); 
+	timer_addr = map_register(0x48044000, 0x200); 
 }
 void map_control_register(){ 
-	control_addr = map_register(0x44e10000); //see page 180 in the TRM.
+	control_addr = map_register(0x44e10000, 0x1000); //see page 180 in the TRM.
 } 
 
 void motor_forward(){
@@ -120,33 +120,47 @@ float get_time(){
 void cleanup(){
 	motor_stop(); 
 	motor_setPWM(0.0); 
-	munmap(gpio_addr, PWM_BLOCK_LENGTH);
-	munmap(timer_addr, PWM_BLOCK_LENGTH);
+	munmap(gpio_addr, 0x200);
+	munmap(timer_addr, 0x200);
+	munmap(control_addr, 0x1000); 
 	close (mem_fd); 
 }
 
 int main (int argc, char const *argv[])
 {
 	struct timeval tv1, tv2;
-	int eqep_num;
 	uint32_t eqep_pos, eqep0_pos;
 
-	if(argc < 2)
+	
+	mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
+	if (mem_fd < 0)
 	{
-		cout << "Usage: " << argv[0] << " 0|1|2" << endl;
-		cout << "Requires the number for which eQEP to open\n";
+		printf("Can't open /dev/mem\n");
 		return 1;
 	}
+	printf("mapping control register...\n"); 	
+	map_control_register(); 
+	control_addr[0x950 / 4] = 0x3; //pulldown, mux mode 3, fast slew, rx inactive. 
 
-	if (strtol(argv[1],NULL,0) >= 0 && strtol(argv[1],NULL,0) <= 2) {
-		eqep_num = strtol(argv[1],NULL,0);
-	} else {
-		cout << "Try again." << endl;
-		return 1;
-	}
+	map_gpio1_register(); 
+	printf("GPIO1_REV 0x%X\n", gpio_addr[0]); 
+	printf("GPIO1_OE 0x%X\n", gpio_addr[0x134 / 4]); 
+	printf("GPIO1_DI 0x%X\n", gpio_addr[0x138 / 4]); 
+	motor_forward(); 
+
+	map_timer_register(); 
+	printf("TIMOER0_TIDR 0x%X\n", timer_addr[0]);
+	printf("TIMOER0_TIOCP_CFG 0x%X\n", timer_addr[0x10 / 4]);
+	printf("TIMOER0_TCLR 0x%X\n", timer_addr[0x38 / 4]); 
+	printf("TIMOER0_TCRR 0x%X\n", timer_addr[0x3c / 4]);  //counter register. 
+	printf("TIMOER0_TLDR 0x%X\n", timer_addr[0x40 / 4]); //load on overflow; defalut to zero. 
+	timer_addr[0x10 / 4] = 0xa; //1010, smart-idle, emufree, no reset.
+	timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR. 
+	timer_addr[0x38 / 4] = 0x3 ; //0000 0000 0000 0011
+	
   
 	printf("accessing eQEP0...\n"); 
-	eQEP eqep(eqep_num);
+	eQEP eqep(0);
 	printf("base address (mmaped) 0x%X\n", eqep.getPWMSSPointer()); 
 	printf("SYSCONFIG 0x%X\n", *(uint32_t*)(eqep.getPWMSSPointer() + PWM_SYSCONFIG));
 	printf("CLKCONFIG 0x%X\n", *(uint32_t*)(eqep.getPWMSSPointer()+PWM_CLKCONFIG));
@@ -169,33 +183,6 @@ int main (int argc, char const *argv[])
 	
 	pwm_addr[9] = 200; //works!!  sets the duty cycle!
 
-	mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
-	if (mem_fd < 0)
-	{
-		printf("Can't open /dev/mem\n");
-		return 1;
-	}
-
-	printf("mapping control register...\n"); 	
-	map_control_register(); 
-	control_addr[0x950 / 4] = 0x3; //pulldown, mux mode 3, fast slew, rx inactive. 
-
-	map_gpio1_register(); 
-	printf("GPIO1_REV 0x%X\n", gpio_addr[0]); 
-	printf("GPIO1_OE 0x%X\n", gpio_addr[0x134 / 4]); 
-	printf("GPIO1_DI 0x%X\n", gpio_addr[0x138 / 4]); 
-	motor_forward(); 
-
-	map_timer_register(); 
-	printf("TIMOER0_TIDR 0x%X\n", timer_addr[0]);
-	printf("TIMOER0_TIOCP_CFG 0x%X\n", timer_addr[0x10 / 4]);
-	printf("TIMOER0_TCLR 0x%X\n", timer_addr[0x38 / 4]); 
-	printf("TIMOER0_TCRR 0x%X\n", timer_addr[0x3c / 4]);  //counter register. 
-	printf("TIMOER0_TLDR 0x%X\n", timer_addr[0x40 / 4]); //load on overflow; defalut to zero. 
-	timer_addr[0x10 / 4] = 0xa; //1010, smart-idle, emufree, no reset.
-	timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR. 
-	timer_addr[0x38 / 4] = 0x3 ; //0000 0000 0000 0011
-	
 	//time a read-loop to assess speed
 	int num_reads = 1000000;
 	int i;
