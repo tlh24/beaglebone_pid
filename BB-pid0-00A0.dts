@@ -40,6 +40,7 @@
 				0x040  0x2F /* *will need to be configured outupt* Mode 7, RxActive */
 			/* P9_16_gpio_pin: pinmux_P9_16_gpio_pin */
 				0x04c  0x2F /* again, to be output. Mode 7, RxActive */
+				0x020	0x04 /* pwm 2 */
 			>;
 			}; 
 		};
