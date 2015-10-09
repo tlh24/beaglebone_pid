@@ -18,7 +18,7 @@ pid_tst: $(OBJS)
 # 	echo "echo BB-pid0 > /sys/devices/platform/bone_capemgr/slots"
 	
 BB-PWM2-00A0.dtbo: BB-PWM2-00A0.dts
-	dtc -O dtb -b 0 $< -o $@
+	dtc -O dtb -b 0 -@ $< -o $@
 
 install: BB-PWM2-00A0.dtbo
 	sudo cp $< /lib/firmware

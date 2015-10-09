@@ -10,7 +10,7 @@
 /dts-v1/;
 /plugin/;
 
-#include </usr/src/bb.org-overlays/include/dt-bindings/board/am335x-bbw-bbb-base.h>
+#include "/usr/src/bb.org-overlays/include/dt-bindings/board/am335x-bbw-bbb-base.h"
 #include </usr/src/bb.org-overlays/include/dt-bindings/pinctrl/am33xx.h>
 
 / {

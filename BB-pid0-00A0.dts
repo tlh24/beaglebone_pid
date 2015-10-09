@@ -22,7 +22,7 @@
 	fragment@0 {
 		target = <&am33xx_pinmux>;
 		__overlay__ {
-			pinctrl_spec: Panel_Pins {
+			bb_pid0_pins: pinmux_bb_pid0_pins {
 				pinctrl-single,pins = <
 			/* P9_27_qep_pin: pinmux_P9_27_qep_pin */
 				0x1a4  0x21	/* Mode 1, Pull-Down, RxActive */
