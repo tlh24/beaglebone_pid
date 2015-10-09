@@ -59,6 +59,7 @@ eQEP_address_(eQEP_address)
   
   printf("eQEP successfully activated\n");
   defaultSettings();
+  printf("eQEP set to default\n");
   active = true;
 }
 
