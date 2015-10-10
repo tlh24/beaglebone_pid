@@ -86,7 +86,7 @@ void motor_stop(){
 }
 void motor_setPWM(float duty){
 	pwm_addr[9] = (int)(duty * 20e3); 
-	//see setup.sh -- 50kHz PWM cycle. 
+	//see setup.sh -- 20kHz PWM cycle. 
 }
 void motor_setDrive(float dr){
 	if(dr < 0.0) motor_reverse(); 
@@ -166,9 +166,9 @@ int main (int argc, char const *argv[])
 	if(control_addr[0x600 / 4] == 0x2b94402e) 
 		printf(" .. looks OK\n"); 
 	control_addr[0x644 / 4] = 0x7; //enable all pwmss function clocks.
-	control_addr[0x840 / 4] = 0x7; //mode 7 (gpio) for P9.15 pinmux
-	control_addr[0x84c / 4] = 0x7; //mode 7 (gpio) for P9.15 pinmux
-	control_addr[0x950 / 4] = 0x3; //pulldown, mux mode 3, fast slew, rx inactive. 
+	control_addr[0x840 / 4] = 0xf; //mode 7 (gpio) for P9.15 pinmux, pull up/down disabled
+	control_addr[0x84c / 4] = 0xf; //mode 7 (gpio) for P9.15 pinmux, pull up/down disabled
+	control_addr[0x950 / 4] = 0xb; //pulldown, mux mode 3, fast slew, rx inactive. 
 	printf("pin 84 0x%X\n", control_addr[0x950 / 4]);
 
 	map_gpio1_register(); 
