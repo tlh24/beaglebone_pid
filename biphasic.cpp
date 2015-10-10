@@ -52,14 +52,14 @@ uint32_t* map_register(uint32_t base_addr, uint32_t len){
 		printf("ERROR: (errno %d)\n", errno);
 		return 0;
 	}
-	printf("peripherals at address 0x%08x mapped\n",
+	printf("address 0x%08x memmapped\n",
 		masked_address);
 	return addr; 
 }
 void map_gpio1_register(){
 	gpio_addr = map_register(0x4804c000, 0x200); 
 }
-void map_timer_register(){
+void map_timer_register(){ //note offset -- timer4.
 	timer_addr = map_register(0x48044000, 0x200); 
 }
 void map_control_register(){ 
@@ -140,7 +140,6 @@ int main (int argc, char const *argv[])
 {
 	struct timeval tv1, tv2;
 	uint32_t eqep_pos, eqep0_pos;
-
 	
 	mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
 	if (mem_fd < 0)
@@ -150,12 +149,15 @@ int main (int argc, char const *argv[])
 	}
 	
 	map_prcm_register(); 
-	printf("CM_PER_L4LS_CLKSTCTRL = 0x%x\n", prcm_addr[0]); 
 	//enable l4ls_glck, so that we may access epwmss peripherals. 
 	// (though ... it seems to be already enabled )
-	printf("CM_PER_L4LS_CLKCTRL = 0x%x\n", prcm_addr[0x60 / 4]); 
-	prcm_addr[0x88 / 4] = 0x2; //enable timer4. 
-	prcm_addr[0xd4 / 4] = 0x2; //enable epwmss0. 
+	//if you don't enable these clock domains, 
+	//you'll ge a bus error in dmesg when reading/writing.
+	// e.g. "unhandled fault external abort on non-linefetch". 
+	prcm_addr[0x60 / 4] = 0x2; //CM_PER_L4LS_CLKCTRL, p 1182, all l4ls peripheral clocks. 
+	prcm_addr[0x88 / 4] = 0x2; //enable timer4. page 1191, CM_PER_TIMER4_CLKCTRL
+	prcm_addr[0xd4 / 4] = 0x2; //enable epwmss0. page 1199, CM_PER_EPWMSS0_CLKCTRL
+	prcm_addr[0xac / 4] = 0x2; //enable GPIO1. page 1192, CM_PER_GPIO1_CLKCTRL			
 	printf("CM_PER_L4LS_CLKSTCTRL = 0x%x\n", prcm_addr[0]); 
 	
 	printf("mapping control register...\n"); 	
@@ -163,10 +165,11 @@ int main (int argc, char const *argv[])
 	printf("device_id 0x%X", control_addr[0x600 / 4]);
 	if(control_addr[0x600 / 4] == 0x2b94402e) 
 		printf(" .. looks OK\n"); 
+	control_addr[0x644 / 4] = 0x7; //enable all pwmss function clocks.
+	control_addr[0x840 / 4] = 0x7; //mode 7 (gpio) for P9.15 pinmux
+	control_addr[0x84c / 4] = 0x7; //mode 7 (gpio) for P9.15 pinmux
 	control_addr[0x950 / 4] = 0x3; //pulldown, mux mode 3, fast slew, rx inactive. 
 	printf("pin 84 0x%X\n", control_addr[0x950 / 4]);
-	control_addr[0x644 / 4] = 0x7;
-	printf("pwmss_ctrl 0x%X\n", control_addr[0x644 / 4]);
 
 	map_gpio1_register(); 
 	printf("GPIO1_REV 0x%X\n", gpio_addr[0]); 
@@ -175,11 +178,11 @@ int main (int argc, char const *argv[])
 	motor_forward(); 
 
 	map_timer_register(); 
-	printf("TIMOER0_TIDR 0x%X\n", timer_addr[0]);
-	printf("TIMOER0_TIOCP_CFG 0x%X\n", timer_addr[0x10 / 4]);
-	printf("TIMOER0_TCLR 0x%X\n", timer_addr[0x38 / 4]); 
-	printf("TIMOER0_TCRR 0x%X\n", timer_addr[0x3c / 4]);  //counter register. 
-	printf("TIMOER0_TLDR 0x%X\n", timer_addr[0x40 / 4]); //load on overflow; defalut to zero. 
+	printf("TIMER4_TIDR 0x%X\n", timer_addr[0]);
+	printf("TIMER4_TIOCP_CFG 0x%X\n", timer_addr[0x10 / 4]);
+	printf("TIMER4_TCLR 0x%X\n", timer_addr[0x38 / 4]); 
+	printf("TIMER4_TCRR 0x%X\n", timer_addr[0x3c / 4]);  //counter register. 
+	printf("TIMER4_TLDR 0x%X\n", timer_addr[0x40 / 4]); //load on overflow; defalut to zero. 
 	timer_addr[0x10 / 4] = 0xa; //1010, smart-idle, emufree, no reset.
 	timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR. 
 	timer_addr[0x38 / 4] = 0x3 ; //0000 0000 0000 0011
@@ -189,6 +192,8 @@ int main (int argc, char const *argv[])
 	printf("EPWMSS0_SYSCFG 0x%X\n", pwmss_addr[1]);
 	printf("EPWMSS0_CLKCFG 0x%X\n", pwmss_addr[2]);
 	printf("EPWMSS0_CLKSTAT 0x%X\n", pwmss_addr[3]);
+	pwmss_addr[2] = 0x111; //enable all clocks. EPWMSS0_CLKCFG, page 2231
+
   
 	printf("accessing eQEP0...\n"); 
 	eQEP eqep(0);
@@ -204,6 +209,9 @@ int main (int argc, char const *argv[])
 
 	// check the PWM module associated with this eQEP. 
 	pwm_addr = (uint16_t*)(eqep.getPWMSSPointer() + 0x200); //got the offset from the device tree.
+	pwm_addr[0] = 0; // up count mode. 
+	pwm_addr[5] = 5000; // 20kHz from the 100Mhz clock.
+	pwm_addr[9] = 2500; // 20kHz from the 100Mhz clock.
 	printf("PWM TBCTL 0x%X\n", pwm_addr[0]); 
 	printf("PWM TBSTS 0x%X\n", pwm_addr[1]); 
 	printf("PWM TBCNT 0x%X\n", pwm_addr[4]); 
@@ -212,7 +220,7 @@ int main (int argc, char const *argv[])
 	printf("PWM CMPA 0x%X (%d)\n", pwm_addr[9], pwm_addr[9]);
 	printf("PWM CMPB 0x%X (%d)\n", pwm_addr[10], pwm_addr[10]);  
 	
-	pwm_addr[9] = 200; //works!!  sets the duty cycle!
+	//pwm_addr[9] = 200; //works!!  sets the duty cycle!
 
 	//time a read-loop to assess speed
 	int num_reads = 1000000;
