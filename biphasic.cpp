@@ -168,9 +168,9 @@ int main (int argc, char const *argv[])
 	if(control_addr[0x600 / 4] == 0x2b94402e) 
 		printf(" .. looks OK\n"); 
 	control_addr[0x644 / 4] = 0x7; //enable all pwmss function clocks.
-	control_addr[0x840 / 4] = 0xf; //mode 7 (gpio) for P9.15 pinmux, pull up/down disabled
-	control_addr[0x84c / 4] = 0xf; //mode 7 (gpio) for P9.15 pinmux, pull up/down disabled
-	control_addr[0x950 / 4] = 0xb; //pulldown, mux mode 3, fast slew, rx inactive. 
+	control_addr[0x840 / 4] = 0xf; //P9.15 mode 7 (gpio) pinmux, pull up/down disabled
+	control_addr[0x84c / 4] = 0xf; //P9.16 mode 7 (gpio) pinmux, pull up/down disabled
+	control_addr[0x950 / 4] = 0xb; //P9.22 mode 3 (PWM) pulldown off, fast slew, rx inactive. 
 	printf("pin 84 0x%X\n", control_addr[0x950 / 4]);
 
 	map_gpio1_register(); 
@@ -210,11 +210,12 @@ int main (int argc, char const *argv[])
 	printf("QPOSMAX0  0x%X\n", eqep.getMaxPos());
 	printf("QEPSTS0   0x%X\n",  eqep.getStatus());
 
-	// check the PWM module associated with this eQEP. 
+	//enable the PWM module associated with this eQEP. 
 	pwm_addr = (uint16_t*)(eqep.getPWMSSPointer() + 0x200); //got the offset from the device tree.
+	//note indexing as shorts. 
 	pwm_addr[0] = 0; // up count mode. 
 	pwm_addr[5] = 5000; // 20kHz from the 100Mhz clock.
-	pwm_addr[9] = 2500; // 20kHz from the 100Mhz clock.
+	pwm_addr[9] = 2500; // 50% duty cycle.
 	printf("PWM TBCTL 0x%X\n", pwm_addr[0]); 
 	printf("PWM TBSTS 0x%X\n", pwm_addr[1]); 
 	printf("PWM TBCNT 0x%X\n", pwm_addr[4]); 
