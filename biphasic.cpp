@@ -178,7 +178,11 @@ int main (int argc, char const *argv[])
 	printf("GPIO1_REV 0x%X\n", gpio_addr[0]); 
 	printf("GPIO1_OE 0x%X\n", gpio_addr[0x134 / 4]); 
 	printf("GPIO1_DI 0x%X\n", gpio_addr[0x138 / 4]); 
-	motor_forward(); 
+	for(int i=0; i<10000; i++){
+		motor_forward(); 
+		usleep(100); 
+		motor_reverse(); 
+	}
 
 	map_timer_register(); 
 	printf("TIMER4_TIDR 0x%X\n", timer_addr[0]);
