@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
-
+// http://www.ti.com/lit/ug/spruh73l/spruh73l.pdf
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -25,6 +25,7 @@
 #include <sys/mman.h>
 #include <errno.h>
 #include <math.h>
+#include <termios.h>
 
 #include "bbb-eqep.h"
 
@@ -40,6 +41,23 @@ uint32_t* timer_addr = 0;
 uint32_t* control_addr = 0; 
 uint32_t* pwmss_addr = 0; 
 uint32_t* prcm_addr = 0; 
+
+uint32_t saved[0x1000/4]; 
+
+int mygetch ( void ) 
+{
+  int ch;
+  struct termios oldt, newt;
+
+  tcgetattr ( STDIN_FILENO, &oldt );
+  newt = oldt;
+  newt.c_lflag &= ~( ICANON | ECHO );
+  tcsetattr ( STDIN_FILENO, TCSANOW, &newt );
+  ch = getchar();
+  tcsetattr ( STDIN_FILENO, TCSANOW, &oldt );
+
+  return ch;
+}
 
 //need to mmap the gpio registers as well. 
 uint32_t* map_register(uint32_t base_addr, uint32_t len){
@@ -165,6 +183,20 @@ int main (int argc, char const *argv[])
 	printf("device_id 0x%X", control_addr[0x600 / 4]);
 	if(control_addr[0x600 / 4] == 0x2b94402e) 
 		printf(" .. looks OK\n"); 
+	//record the present state, pause for user input, and then compare. 
+	for(int i=0; i<0x1000 / 4; i++){
+		saved[i] = control_addr[i]; 
+	}
+	printf("load a cape overlay, so we can see which registers changed.\n"); 
+	mygetch(); 
+	for(int i=0; i<0x1000 / 4; i++){
+		if(saved[i] != control_addr[i]){
+			printf("offset 0x%X changed, was 0x%X is now 0x%X\n", 
+					 i*4, saved[i], control_addr[i]); 
+		}
+	}
+	cleanup(); 
+	return 0;
 	control_addr[0x644 / 4] = 0x7; //enable all pwmss function clocks.
 	control_addr[0x840 / 4] = 0xf; //mode 7 (gpio) for P9.15 pinmux, pull up/down disabled
 	control_addr[0x84c / 4] = 0xf; //mode 7 (gpio) for P9.15 pinmux, pull up/down disabled
@@ -172,6 +204,7 @@ int main (int argc, char const *argv[])
 	printf("pin 84 0x%X\n", control_addr[0x950 / 4]);
 
 	map_gpio1_register(); 
+	gpio_addr[0x134 / 4] &= 0xffffffff ^ ((0x1 << 16) | (0x1 << 19)); //enable output drivers
 	printf("GPIO1_REV 0x%X\n", gpio_addr[0]); 
 	printf("GPIO1_OE 0x%X\n", gpio_addr[0x134 / 4]); 
 	printf("GPIO1_DI 0x%X\n", gpio_addr[0x138 / 4]); 
