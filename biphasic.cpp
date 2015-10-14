@@ -173,8 +173,9 @@ int main (int argc, char const *argv[])
 
 	gpio_addr[0x134 / 4] &= 0xffffffff ^ ((0x1 << 2) | (0x1 << 4) | (0x1 << 5)); //enable output 
 	gpio1_addr[0x134 / 4] &= 0xffffffff ^ (0x1 << 19);
-	printf("GPIO0_REV 0x%X", gpio_addr[0]); 
-	if(gpio_addr[0x134 / 4] == 0x50600801) 
+	printf("GPIO0_REV 0x%X\n", gpio_addr[0]); 
+	printf("GPIO1_REV 0x%X", gpio1_addr[0]); 
+	if(gpio1_addr[0x134 / 4] == 0x50600801) 
 		printf(" .. looks OK\n"); 
 	printf("GPIO0_OE 0x%X\n", gpio_addr[0x134 / 4]); 
 	printf("GPIO0_DI 0x%X\n", gpio_addr[0x138 / 4]); 
