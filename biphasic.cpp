@@ -220,7 +220,7 @@ int main (int argc, char const *argv[])
 	printf("QEPSTS0   0x%X\n",  eqep.getStatus());
 
 	//enable the PWM module associated with this eQEP. 
-	pwm_addr = (uint16_t*)(eqep.getPWMSSPointer() + 0x200); //got the offset from the device tree.
+	pwm_addr = (uint16_t*)(pwmss_addr + 0x200); //got the offset from the device tree.
 	//note indexing as shorts. 
 	pwm_addr[5] = 5000; // PRD. 20kHz from the 100Mhz clock.
 	pwm_addr[7] = 0x0; // CMPCTL.  enable shadowm load when counter=0. 
