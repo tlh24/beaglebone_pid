@@ -160,7 +160,8 @@ int main (int argc, char const *argv[])
 	prcm_addr[0x88 / 4] = 0x2; //enable timer4. page 1191, CM_PER_TIMER4_CLKCTRL
 	prcm_addr[0xd4 / 4] = 0x2; //enable epwmss0. page 1199, CM_PER_EPWMSS0_CLKCTRL
 	prcm_addr[0xac / 4] = 0x2; //enable GPIO1. page 1192, CM_PER_GPIO1_CLKCTRL
-	printf("CM_PER_L4LS_CLKSTCTRL = 0x%x\n", prcm_addr[0]); 
+	prcm_addr[0x120 / 4] = 0x2; //enable L4HS clock, page 1214, CM_PER_L4HS_CLKCTRL
+	printf("CM_PER_L4LS_CLKSTCTRL = 0x%x\n", prcm_addr[0x11c / 4]); 
 	
 	printf("mapping control register...\n"); 	
 	map_control_register(); 
