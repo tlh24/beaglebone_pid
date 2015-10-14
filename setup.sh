@@ -34,3 +34,10 @@ echo out > /sys/class/gpio/gpio51/direction
 echo on > /sys/devices/ocp.3/48044000.timer/power/control
 # timer is used for high-speed internal interval timing. 
 echo on > /sys/devices/ocp.3/4804c000.gpio/power/control
+
+# code only works with gcc 4.7+
+if 0 ; then
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.6 60 --slave /usr/bin/g++ g++ /usr/bin/g++-4.6 
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.7 40 --slave /usr/bin/g++ g++ /usr/bin/g++-4.7 
+sudo update-alternatives --config gcc
+fi
