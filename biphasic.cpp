@@ -36,15 +36,12 @@ using namespace BBB;
 int	mem_fd; 
 uint16_t* pwm_addr = 0; 
 uint32_t* gpio_addr = 0; 
-uint32_t* gpio1_addr = 0; 
 uint32_t* timer_addr = 0; 
-uint32_t* control_addr = 0; 
 uint32_t* pwmss_addr = 0; 
-uint32_t* prcm_addr = 0; 
 
 uint32_t saved[0x1000/4]; 
 
-//using mmap as a general-purpose mechanism for accessing system registers from userspace.
+//mmap is used as a general-purpose mechanism for accessing system registers from userspace.
 uint32_t* map_register(uint32_t base_addr, uint32_t len){
 	uint32_t* addr = (uint32_t*)mmap(NULL, len,
 		PROT_READ | PROT_WRITE, MAP_SHARED , mem_fd, base_addr);
@@ -115,11 +112,8 @@ void cleanup(){
 	motor_stop(); 
 	motor_setPWM(0.0); 
 	munmap(gpio_addr, 0x200);
-	munmap(gpio1_addr, 0x1000);
 	munmap(timer_addr, 0x200);
-	munmap(control_addr, 0x1000); 
 	munmap(pwmss_addr, 0x1000); 
-	munmap(prcm_addr, 0x1000); 
 	close (mem_fd); 
 }
 
@@ -129,64 +123,27 @@ int main (int argc, char const *argv[])
 	uint32_t eqep_pos, eqep0_pos;
 	
 	mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
-	if (mem_fd < 0)
-	{
+	if (mem_fd < 0){
 		printf("Can't open /dev/mem\n");
 		return 1;
 	}
 	
-	gpio_addr = map_register(0x44e07000, 0x200); 
-	gpio1_addr = map_register(0x4804c000, 0x1000); 
+	gpio_addr = map_register(0x44e07000, 0x200); //gpio0.
 	timer_addr = map_register(0x48044000, 0x200); // timer 4.
-	control_addr = map_register(0x44e10000, 0x1000); //see page 180 in the TRM.
 	pwmss_addr = map_register(0x48300000, 0x1000); //see page 180 in the TRM.
-	prcm_addr = map_register(0x44e00000, 0x1000); //CM_PER module.
 	
-
-	//enable l4ls_glck, so that we may access epwmss peripherals. 
-	// (though ... it seems to be already enabled )
-	//if you don't enable these clock domains, 
-	//you'll ge a bus error in dmesg when reading/writing.
-	// e.g. "unhandled fault external abort on non-linefetch". 
-	prcm_addr[0x60 / 4] = 0x2; //CM_PER_L4LS_CLKCTRL, p 1182, all l4ls peripheral clocks. 
-	prcm_addr[0x88 / 4] = 0x2; //enable timer4. page 1191, CM_PER_TIMER4_CLKCTRL
-	prcm_addr[0xd4 / 4] = 0x2; //enable epwmss0. page 1199, CM_PER_EPWMSS0_CLKCTRL
-	prcm_addr[0xac / 4] = 0x40002; //enable GPIO1. page 1192, CM_PER_GPIO1_CLKCTRL
-	prcm_addr[0x120 / 4] = 0x2; //enable L4HS clock, page 1214, CM_PER_L4HS_CLKCTRL (should be enabled already)
-	printf("CM_PER_L4LS_CLKSTCTRL = 0x%x\n", prcm_addr[0]); // page 1163.
-	printf("CM_PER_L4HS_CLKSTCTRL = 0x%x\n", prcm_addr[0x11c / 4]); //see?  enabled..
-	
-	printf("Control device_id 0x%X", control_addr[0x600 / 4]);
-	if(control_addr[0x600 / 4] == 0x2b94402e) 
-		printf(" .. looks OK\n"); 
-	control_addr[0x664 / 4] = 0x7; //enable TBCLKENx. page 1403, pwmss_ctrl
-	control_addr[0x95c / 4] = 0xf; //P9.17 mode 7 (gpio0) pinmux, pull up/down disabled
-	control_addr[0x958 / 4] = 0xf; //P9.18 mode 7 (gpio0) pinmux, pull up/down disabled
-	control_addr[0x950 / 4] = 0xf; //***P9.22 mode 3 (PWM) pulldown off, fast slew, rx inactive. 
-	control_addr[0x84c / 4] = 0xf; //P9.16 mode 7 (gpio1) pulldown off, fast slew, rx inactive. 
-	printf("pin P9.17 0x%X\n", control_addr[0x95c / 4]); 
-	printf("pin P9.22 0x%X\n", control_addr[0x950 / 4]);
-	printf("pin P9.16 0x%X\n", control_addr[0x84c / 4]);
-	printf("pwmss_ctrl 0x%X\n", control_addr[0x664 / 4]);
-
-	gpio_addr[0x134 / 4] &= 0xffffffff ^ ((0x1 << 2) | (0x1 << 4) | (0x1 << 5)); //enable output 
-	gpio1_addr[0x134 / 4] &= 0xffffffff ^ (0x1 << 19);
+	gpio_addr[0x134 / 4] &= 0xffffffff ^ ((0x1 << 4) | (0x1 << 5)); //enable output (should enabled by setup.sh) 
 	printf("GPIO0_REV 0x%X\n", gpio_addr[0]); 
-	printf("GPIO1_REV 0x%X", gpio1_addr[0]); 
-	if(gpio1_addr[0] == 0x50600801) 
+	if(gpio_addr[0] == 0x50600801) 
 		printf(" .. looks OK\n"); 
 	printf("GPIO0_OE 0x%X\n", gpio_addr[0x134 / 4]); 
 	printf("GPIO0_DI 0x%X\n", gpio_addr[0x138 / 4]); 
 	for(int i=0; i<10000; i++){
 		gpio_addr[0x190 / 4] = 0x1 << 2; //clear data out
-		gpio1_addr[0x190 / 4] = 0x1 << 19; //clear data out
 		usleep(100); 
 		gpio_addr[0x194 / 4] = 0x1 << 2; //set data out
-		gpio1_addr[0x194 / 4] = 0x1 << 2; //set data out
 		usleep(10); 
-	}
-	cleanup(); 
-	return 0; 
+	} 
 	
 	printf("TIMER4_TIDR 0x%X\n", timer_addr[0]);
 	printf("TIMER4_TIOCP_CFG 0x%X\n", timer_addr[0x10 / 4]);
@@ -201,9 +158,9 @@ int main (int argc, char const *argv[])
 	printf("EPWMSS0_SYSCFG 0x%X\n", pwmss_addr[1]);
 	printf("EPWMSS0_CLKCFG 0x%X\n", pwmss_addr[2]);
 	printf("EPWMSS0_CLKSTAT 0x%X\n", pwmss_addr[3]);
-	pwmss_addr[2] = 0x111; //enable all clocks. EPWMSS0_CLKCFG, page 2231
+	// pwmss_addr[2] = 0x111; //enable all clocks. EPWMSS0_CLKCFG, page 2231
+	// again, above should be done by setup.sh
 
-  
 	printf("accessing eQEP0...\n"); 
 	eQEP eqep(0);
 	printf("base address (mmaped) 0x%X\n", eqep.getPWMSSPointer()); 
@@ -222,7 +179,7 @@ int main (int argc, char const *argv[])
 	pwm_addr[5] = 5000; // PRD. 20kHz from the 100Mhz clock.
 	pwm_addr[7] = 0x0; // CMPCTL.  enable shadowm load when counter=0. 
 	pwm_addr[9] = 2500; //CMPA. 50% duty cycle.
-	pwm_addr[11] = 0x12;  // set when the couner=0; clear when counter = CMPA
+	pwm_addr[11] = 0x12;  // set when the counter = 0; clear when counter = CMPA
  	pwm_addr[12] = 0; //disable output B. 
  	pwm_addr[0] = 0xc0; // up count mode, software sync.
 	printf("PWM TBCTL 0x%X\n", pwm_addr[0]); 
