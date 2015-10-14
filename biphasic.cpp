@@ -160,8 +160,8 @@ int main (int argc, char const *argv[])
 	prcm_addr[0x88 / 4] = 0x2; //enable timer4. page 1191, CM_PER_TIMER4_CLKCTRL
 	prcm_addr[0xd4 / 4] = 0x2; //enable epwmss0. page 1199, CM_PER_EPWMSS0_CLKCTRL
 	prcm_addr[0xac / 4] = 0x2; //enable GPIO1. page 1192, CM_PER_GPIO1_CLKCTRL
-	prcm_addr[0x120 / 4] = 0x2; //enable L4HS clock, page 1214, CM_PER_L4HS_CLKCTRL
-	printf("CM_PER_L4LS_CLKSTCTRL = 0x%x\n", prcm_addr[0x11c / 4]); 
+	prcm_addr[0x120 / 4] = 0x2; //enable L4HS clock, page 1214, CM_PER_L4HS_CLKCTRL (should be enabled already)
+	printf("CM_PER_L4LS_CLKSTCTRL = 0x%x\n", prcm_addr[0x11c / 4]); //see?  enabled..
 	
 	printf("mapping control register...\n"); 	
 	map_control_register(); 
@@ -172,17 +172,20 @@ int main (int argc, char const *argv[])
 	control_addr[0x95c / 4] = 0xf; //P9.17 mode 7 (gpio0) pinmux, pull up/down disabled
 	control_addr[0x958 / 4] = 0xf; //P9.18 mode 7 (gpio0) pinmux, pull up/down disabled
 	control_addr[0x950 / 4] = 0xb; //P9.22 mode 3 (PWM) pulldown off, fast slew, rx inactive. 
-	printf("pin 84 0x%X\n", control_addr[0x950 / 4]);
+	printf("pin P9.17 0x%X\n", control_addr[0x95c / 4]);
 
 	map_gpio0_register(); 
 	gpio_addr[0x134 / 4] &= 0xffffffff ^ ((0x1 << 4) | (0x1 << 5)); //enable output drivers
-	printf("GPIO0_REV 0x%X\n", gpio_addr[0]); 
+	printf("GPIO0_REV 0x%X", gpio_addr[0]); 
+	if(gpio_addr[0x600 / 4] == 0x50600801) 
+		printf(" .. looks OK\n"); 
 	printf("GPIO0_OE 0x%X\n", gpio_addr[0x134 / 4]); 
 	printf("GPIO0_DI 0x%X\n", gpio_addr[0x138 / 4]); 
 	for(int i=0; i<10000; i++){
 		motor_forward(); 
 		usleep(100); 
 		motor_reverse(); 
+		usleep(10); 
 	}
 
 	map_timer_register(); 
