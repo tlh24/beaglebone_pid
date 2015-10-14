@@ -169,7 +169,7 @@ int main (int argc, char const *argv[])
 	printf("device_id 0x%X", control_addr[0x600 / 4]);
 	if(control_addr[0x600 / 4] == 0x2b94402e) 
 		printf(" .. looks OK\n"); 
-	prcm_addr[0x664 / 4] = 0x1; //enable TBCLKEN0. page 1403, pwmss_ctrl
+	control_addr[0x664 / 4] = 0x7; //enable TBCLKENx. page 1403, pwmss_ctrl
 	control_addr[0x95c / 4] = 0xf; //P9.17 mode 7 (gpio0) pinmux, pull up/down disabled
 	control_addr[0x958 / 4] = 0x2b; //P9.18 mode 7 (gpio0) pinmux, pull up/down disabled
 	control_addr[0x950 / 4] = 0xb; //P9.22 mode 3 (PWM) pulldown off, fast slew, rx inactive. 
