@@ -165,10 +165,12 @@ int main (int argc, char const *argv[])
 	control_addr[0x95c / 4] = 0xf; //P9.17 mode 7 (gpio0) pinmux, pull up/down disabled
 	control_addr[0x958 / 4] = 0xf; //P9.18 mode 7 (gpio0) pinmux, pull up/down disabled
 	control_addr[0x950 / 4] = 0xf; //***P9.22 mode 3 (PWM) pulldown off, fast slew, rx inactive. 
+	control_addr[0x84c / 4] = 0xf; //P9.16 mode 7 (gpio1) pulldown off, fast slew, rx inactive. 
 	printf("pin P9.17 0x%X\n", control_addr[0x95c / 4]);
 	printf("pwmss_ctrl 0x%X\n", control_addr[0x664 / 4]);
 
 	gpio_addr[0x134 / 4] &= 0xffffffff ^ ((0x1 << 2) | (0x1 << 4) | (0x1 << 5)); //enable output 
+	gpio1_addr[0x134 / 4] &= 0xffffffff ^ (0x1 << 19);
 	printf("GPIO0_REV 0x%X", gpio_addr[0]); 
 	if(gpio_addr[0x134 / 4] == 0x50600801) 
 		printf(" .. looks OK\n"); 
@@ -176,8 +178,10 @@ int main (int argc, char const *argv[])
 	printf("GPIO0_DI 0x%X\n", gpio_addr[0x138 / 4]); 
 	for(int i=0; i<10000; i++){
 		gpio_addr[0x190 / 4] = 0x1 << 2; //clear data out
+		gpio1_addr[0x190 / 4] = 0x1 << 19; //clear data out
 		usleep(100); 
 		gpio_addr[0x194 / 4] = 0x1 << 2; //set data out
+		gpio1_addr[0x194 / 4] = 0x1 << 2; //set data out
 		usleep(10); 
 	}
 	cleanup(); 
