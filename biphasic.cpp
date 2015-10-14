@@ -169,7 +169,7 @@ int main (int argc, char const *argv[])
 	printf("device_id 0x%X", control_addr[0x600 / 4]);
 	if(control_addr[0x600 / 4] == 0x2b94402e) 
 		printf(" .. looks OK\n"); 
-	control_addr[0x644 / 4] = 0x7; //enable all pwmss function clocks.
+	prcm_addr[0x664 / 4] = 0x1; //enable TBCLKEN0. page 1403, pwmss_ctrl
 	control_addr[0x95c / 4] = 0xf; //P9.17 mode 7 (gpio0) pinmux, pull up/down disabled
 	control_addr[0x958 / 4] = 0x2b; //P9.18 mode 7 (gpio0) pinmux, pull up/down disabled
 	control_addr[0x950 / 4] = 0xb; //P9.22 mode 3 (PWM) pulldown off, fast slew, rx inactive. 
@@ -222,12 +222,12 @@ int main (int argc, char const *argv[])
 	//enable the PWM module associated with this eQEP. 
 	pwm_addr = (uint16_t*)(eqep.getPWMSSPointer() + 0x200); //got the offset from the device tree.
 	//note indexing as shorts. 
-	pwm_addr[0] = 0; // up count mode. 
 	pwm_addr[5] = 5000; // PRD. 20kHz from the 100Mhz clock.
 	pwm_addr[7] = 0x0; // CMPCTL.  enable shadowm load when counter=0. 
 	pwm_addr[9] = 2500; //CMPA. 50% duty cycle.
 	pwm_addr[11] = 0x12;  // set when the couner=0; clear when counter = CMPA
  	pwm_addr[12] = 0; //disable output B. 
+ 	pwm_addr[0] = 0; // up count mode, software sync.
 	printf("PWM TBCTL 0x%X\n", pwm_addr[0]); 
 	printf("PWM TBSTS 0x%X\n", pwm_addr[1]); 
 	printf("PWM TBCNT 0x%X\n", pwm_addr[4]); 
