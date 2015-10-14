@@ -36,6 +36,7 @@ using namespace BBB;
 int	mem_fd; 
 uint16_t* pwm_addr = 0; 
 uint32_t* gpio_addr = 0; 
+uint32_t* gpio1_addr = 0; 
 uint32_t* timer_addr = 0; 
 uint32_t* control_addr = 0; 
 uint32_t* pwmss_addr = 0; 
@@ -58,21 +59,6 @@ uint32_t* map_register(uint32_t base_addr, uint32_t len){
 		masked_address);
 	return addr; 
 }
-void map_gpio0_register(){
-	gpio_addr = map_register(0x44e07000, 0x200); 
-}
-void map_timer_register(){ //note offset -- timer4.
-	timer_addr = map_register(0x48044000, 0x200); 
-}
-void map_control_register(){ 
-	control_addr = map_register(0x44e10000, 0x1000); //see page 180 in the TRM.
-} 
-void map_pwmss_register(){ 
-	pwmss_addr = map_register(0x48300000, 0x1000); //see page 180 in the TRM.
-} 
-void map_prcm_register(){ 
-	prcm_addr = map_register(0x44e00000, 0x1000); //CM_PER module. 
-} 
 
 void motor_forward(){
 	gpio_addr[0x190 / 4] = 0x1 << 5; //clear data out
@@ -131,6 +117,7 @@ void cleanup(){
 	motor_stop(); 
 	motor_setPWM(0.0); 
 	munmap(gpio_addr, 0x200);
+	munmap(gpio1_addr, 0x1000);
 	munmap(timer_addr, 0x200);
 	munmap(control_addr, 0x1000); 
 	munmap(pwmss_addr, 0x1000); 
@@ -150,7 +137,14 @@ int main (int argc, char const *argv[])
 		return 1;
 	}
 	
-	map_prcm_register(); 
+	gpio_addr = map_register(0x44e07000, 0x200); 
+	gpio1_addr = map_register(0x4804c000, 0x1000); 
+	timer_addr = map_register(0x48044000, 0x200); // timer 4.
+	control_addr = map_register(0x44e10000, 0x1000); //see page 180 in the TRM.
+	pwmss_addr = map_register(0x48300000, 0x1000); //see page 180 in the TRM.
+	prcm_addr = map_register(0x44e00000, 0x1000); //CM_PER module.
+	
+
 	//enable l4ls_glck, so that we may access epwmss peripherals. 
 	// (though ... it seems to be already enabled )
 	//if you don't enable these clock domains, 
@@ -164,32 +158,31 @@ int main (int argc, char const *argv[])
 	printf("CM_PER_L4LS_CLKSTCTRL = 0x%x\n", prcm_addr[0]); //see?  enabled..
 	printf("CM_PER_L4HS_CLKSTCTRL = 0x%x\n", prcm_addr[0x11c / 4]); //see?  enabled..
 	
-	printf("mapping control register...\n"); 	
-	map_control_register(); 
 	printf("device_id 0x%X", control_addr[0x600 / 4]);
 	if(control_addr[0x600 / 4] == 0x2b94402e) 
 		printf(" .. looks OK\n"); 
 	control_addr[0x664 / 4] = 0x7; //enable TBCLKENx. page 1403, pwmss_ctrl
 	control_addr[0x95c / 4] = 0xf; //P9.17 mode 7 (gpio0) pinmux, pull up/down disabled
-	control_addr[0x958 / 4] = 0x2b; //P9.18 mode 7 (gpio0) pinmux, pull up/down disabled
-	control_addr[0x950 / 4] = 0xb; //P9.22 mode 3 (PWM) pulldown off, fast slew, rx inactive. 
+	control_addr[0x958 / 4] = 0xf; //P9.18 mode 7 (gpio0) pinmux, pull up/down disabled
+	control_addr[0x950 / 4] = 0xf; //***P9.22 mode 3 (PWM) pulldown off, fast slew, rx inactive. 
 	printf("pin P9.17 0x%X\n", control_addr[0x95c / 4]);
+	printf("pwmss_ctrl 0x%X\n", control_addr[0x664 / 4]);
 
-	map_gpio0_register(); 
-	gpio_addr[0x134 / 4] &= 0xffffffff ^ ((0x1 << 4) | (0x1 << 5)); //enable output drivers
+	gpio_addr[0x134 / 4] &= 0xffffffff ^ ((0x1 << 2) | (0x1 << 4) | (0x1 << 5)); //enable output 
 	printf("GPIO0_REV 0x%X", gpio_addr[0]); 
 	if(gpio_addr[0x134 / 4] == 0x50600801) 
 		printf(" .. looks OK\n"); 
 	printf("GPIO0_OE 0x%X\n", gpio_addr[0x134 / 4]); 
 	printf("GPIO0_DI 0x%X\n", gpio_addr[0x138 / 4]); 
 	for(int i=0; i<10000; i++){
-		motor_forward(); 
+		gpio_addr[0x190 / 4] = 0x1 << 2; //clear data out
 		usleep(100); 
-		motor_reverse(); 
+		gpio_addr[0x194 / 4] = 0x1 << 2; //set data out
 		usleep(10); 
 	}
-
-	map_timer_register(); 
+	cleanup(); 
+	return 0; 
+	
 	printf("TIMER4_TIDR 0x%X\n", timer_addr[0]);
 	printf("TIMER4_TIOCP_CFG 0x%X\n", timer_addr[0x10 / 4]);
 	printf("TIMER4_TCLR 0x%X\n", timer_addr[0x38 / 4]); 
@@ -199,7 +192,6 @@ int main (int argc, char const *argv[])
 	timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR. 
 	timer_addr[0x38 / 4] = 0x3 ; //0000 0000 0000 0011
 	
-	map_pwmss_register(); 
 	printf("EPWMSS0_IDVER 0x%X\n", pwmss_addr[0]);
 	printf("EPWMSS0_SYSCFG 0x%X\n", pwmss_addr[1]);
 	printf("EPWMSS0_CLKCFG 0x%X\n", pwmss_addr[2]);
