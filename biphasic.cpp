@@ -139,9 +139,9 @@ int main (int argc, char const *argv[])
 	printf("GPIO0_OE 0x%X\n", gpio_addr[0x134 / 4]); 
 	printf("GPIO0_DI 0x%X\n", gpio_addr[0x138 / 4]); 
 	for(int i=0; i<10000; i++){
-		gpio_addr[0x190 / 4] = 0x1 << 2; //clear data out
+		gpio_addr[0x190 / 4] = 0x1 << 4; //clear data out
 		usleep(100); 
-		gpio_addr[0x194 / 4] = 0x1 << 2; //set data out
+		gpio_addr[0x194 / 4] = 0x1 << 4; //set data out
 		usleep(10); 
 	} 
 	
