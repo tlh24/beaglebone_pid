@@ -48,7 +48,7 @@ uint32_t saved[0x1000/4];
 uint32_t* map_register(uint32_t base_addr, uint32_t len){
 	int masked_address = base_addr & ~(getpagesize()-1);
 	uint32_t* addr = (uint32_t*)mmap(NULL, len,
-		PROT_READ | PROT_WRITE, MAP_SHARED, mem_fd, masked_address);
+		PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, mem_fd, masked_address);
 	if (addr == MAP_FAILED )
 	{
 		printf("Memory Mapping failed for 0x%04x register\n", masked_address);
@@ -175,7 +175,7 @@ int main (int argc, char const *argv[])
 	gpio1_addr[0x134 / 4] &= 0xffffffff ^ (0x1 << 19);
 	printf("GPIO0_REV 0x%X\n", gpio_addr[0]); 
 	printf("GPIO1_REV 0x%X", gpio1_addr[0]); 
-	if(gpio1_addr[0x134 / 4] == 0x50600801) 
+	if(gpio1_addr[0] == 0x50600801) 
 		printf(" .. looks OK\n"); 
 	printf("GPIO0_OE 0x%X\n", gpio_addr[0x134 / 4]); 
 	printf("GPIO0_DI 0x%X\n", gpio_addr[0x138 / 4]); 
