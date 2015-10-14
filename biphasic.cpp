@@ -58,8 +58,8 @@ uint32_t* map_register(uint32_t base_addr, uint32_t len){
 		masked_address);
 	return addr; 
 }
-void map_gpio1_register(){
-	gpio_addr = map_register(0x4804c000, 0x200); 
+void map_gpio0_register(){
+	gpio_addr = map_register(0x44e07000, 0x200); 
 }
 void map_timer_register(){ //note offset -- timer4.
 	timer_addr = map_register(0x48044000, 0x200); 
@@ -75,16 +75,16 @@ void map_prcm_register(){
 } 
 
 void motor_forward(){
-	gpio_addr[0x190 / 4] = 0x1 << 19; //clear data out
-	gpio_addr[0x194 / 4] = 0x1 << 16; //set data out
+	gpio_addr[0x190 / 4] = 0x1 << 5; //clear data out
+	gpio_addr[0x194 / 4] = 0x1 << 4; //set data out
 }
 void motor_reverse(){
-	gpio_addr[0x190 / 4] = 0x1 << 16; //clear data out
-	gpio_addr[0x194 / 4] = 0x1 << 19; //set data out
+	gpio_addr[0x190 / 4] = 0x1 << 4; //clear data out
+	gpio_addr[0x194 / 4] = 0x1 << 5; //set data out
 }
 void motor_stop(){
-	gpio_addr[0x190 / 4] = 0x1 << 16; //clear data out
-	gpio_addr[0x190 / 4] = 0x1 << 19; //clear data out
+	gpio_addr[0x190 / 4] = 0x1 << 4; //clear data out
+	gpio_addr[0x190 / 4] = 0x1 << 5; //clear data out
 }
 void motor_setPWM(float duty){
 	pwm_addr[9] = (int)(duty * 20e3); 
@@ -159,7 +159,7 @@ int main (int argc, char const *argv[])
 	prcm_addr[0x60 / 4] = 0x2; //CM_PER_L4LS_CLKCTRL, p 1182, all l4ls peripheral clocks. 
 	prcm_addr[0x88 / 4] = 0x2; //enable timer4. page 1191, CM_PER_TIMER4_CLKCTRL
 	prcm_addr[0xd4 / 4] = 0x2; //enable epwmss0. page 1199, CM_PER_EPWMSS0_CLKCTRL
-	prcm_addr[0xac / 4] = 0x2; //enable GPIO1. page 1192, CM_PER_GPIO1_CLKCTRL			
+	prcm_addr[0xac / 4] = 0x2; //enable GPIO1. page 1192, CM_PER_GPIO1_CLKCTRL
 	printf("CM_PER_L4LS_CLKSTCTRL = 0x%x\n", prcm_addr[0]); 
 	
 	printf("mapping control register...\n"); 	
@@ -168,16 +168,16 @@ int main (int argc, char const *argv[])
 	if(control_addr[0x600 / 4] == 0x2b94402e) 
 		printf(" .. looks OK\n"); 
 	control_addr[0x644 / 4] = 0x7; //enable all pwmss function clocks.
-	control_addr[0x840 / 4] = 0xf; //P9.15 mode 7 (gpio) pinmux, pull up/down disabled
-	control_addr[0x84c / 4] = 0xf; //P9.16 mode 7 (gpio) pinmux, pull up/down disabled
+	control_addr[0x95c / 4] = 0xf; //P9.17 mode 7 (gpio0) pinmux, pull up/down disabled
+	control_addr[0x958 / 4] = 0xf; //P9.18 mode 7 (gpio0) pinmux, pull up/down disabled
 	control_addr[0x950 / 4] = 0xb; //P9.22 mode 3 (PWM) pulldown off, fast slew, rx inactive. 
 	printf("pin 84 0x%X\n", control_addr[0x950 / 4]);
 
-	map_gpio1_register(); 
-	gpio_addr[0x134 / 4] &= 0xffffffff ^ ((0x1 << 16) | (0x1 << 19)); //enable output drivers
-	printf("GPIO1_REV 0x%X\n", gpio_addr[0]); 
-	printf("GPIO1_OE 0x%X\n", gpio_addr[0x134 / 4]); 
-	printf("GPIO1_DI 0x%X\n", gpio_addr[0x138 / 4]); 
+	map_gpio0_register(); 
+	gpio_addr[0x134 / 4] &= 0xffffffff ^ ((0x1 << 4) | (0x1 << 5)); //enable output drivers
+	printf("GPIO0_REV 0x%X\n", gpio_addr[0]); 
+	printf("GPIO0_OE 0x%X\n", gpio_addr[0x134 / 4]); 
+	printf("GPIO0_DI 0x%X\n", gpio_addr[0x138 / 4]); 
 	for(int i=0; i<10000; i++){
 		motor_forward(); 
 		usleep(100); 
