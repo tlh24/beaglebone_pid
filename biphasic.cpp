@@ -153,12 +153,12 @@ int main (int argc, char const *argv[])
 	prcm_addr[0x60 / 4] = 0x2; //CM_PER_L4LS_CLKCTRL, p 1182, all l4ls peripheral clocks. 
 	prcm_addr[0x88 / 4] = 0x2; //enable timer4. page 1191, CM_PER_TIMER4_CLKCTRL
 	prcm_addr[0xd4 / 4] = 0x2; //enable epwmss0. page 1199, CM_PER_EPWMSS0_CLKCTRL
-	prcm_addr[0xac / 4] = 0x2; //enable GPIO1. page 1192, CM_PER_GPIO1_CLKCTRL
+	prcm_addr[0xac / 4] = 0x40002; //enable GPIO1. page 1192, CM_PER_GPIO1_CLKCTRL
 	prcm_addr[0x120 / 4] = 0x2; //enable L4HS clock, page 1214, CM_PER_L4HS_CLKCTRL (should be enabled already)
-	printf("CM_PER_L4LS_CLKSTCTRL = 0x%x\n", prcm_addr[0]); //see?  enabled..
+	printf("CM_PER_L4LS_CLKSTCTRL = 0x%x\n", prcm_addr[0]); // page 1163.
 	printf("CM_PER_L4HS_CLKSTCTRL = 0x%x\n", prcm_addr[0x11c / 4]); //see?  enabled..
 	
-	printf("device_id 0x%X", control_addr[0x600 / 4]);
+	printf("Control device_id 0x%X", control_addr[0x600 / 4]);
 	if(control_addr[0x600 / 4] == 0x2b94402e) 
 		printf(" .. looks OK\n"); 
 	control_addr[0x664 / 4] = 0x7; //enable TBCLKENx. page 1403, pwmss_ctrl
