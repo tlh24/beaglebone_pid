@@ -150,6 +150,7 @@ int main (int argc, char const *argv[])
 	printf("TIMER4_TCLR 0x%X\n", timer_addr[0x38 / 4]); 
 	printf("TIMER4_TCRR 0x%X\n", timer_addr[0x3c / 4]);  //counter register. 
 	printf("TIMER4_TLDR 0x%X\n", timer_addr[0x40 / 4]); //load on overflow; defalut to zero. 
+	fflush(stdout);
 	timer_addr[0x10 / 4] = 0xa; //1010, smart-idle, emufree, no reset.
 	timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR. 
 	timer_addr[0x38 / 4] = 0x3 ; //0000 0000 0000 0011
