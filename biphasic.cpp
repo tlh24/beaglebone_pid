@@ -38,6 +38,7 @@ uint16_t* pwm_addr = 0;
 uint32_t* gpio_addr = 0; 
 uint32_t* timer_addr = 0; 
 uint32_t* pwmss_addr = 0; 
+uint32_t* prcm_addr = 0; 
 
 uint32_t saved[0x1000/4]; 
 
@@ -114,6 +115,7 @@ void cleanup(){
 	munmap(gpio_addr, 0x200);
 	munmap(timer_addr, 0x200);
 	munmap(pwmss_addr, 0x1000); 
+	munmap(prcm_addr, 0x1000); 
 	close (mem_fd); 
 }
 
@@ -131,6 +133,20 @@ int main (int argc, char const *argv[])
 	gpio_addr = map_register(0x44e07000, 0x200); //gpio0.
 	timer_addr = map_register(0x48044000, 0x200); // timer 4.
 	pwmss_addr = map_register(0x48300000, 0x1000); //see page 180 in the TRM.
+	prcm_addr = map_register(0x44e00000, 0x1000); //CM_PER module.
+	
+	//enable l4ls_glck, so that we may access epwmss peripherals. 
+	// (though ... it seems to be already enabled )
+	//if you don't enable these clock domains, 
+	//you'll ge a bus error in dmesg when reading/writing.
+	// e.g. "unhandled fault external abort on non-linefetch". 
+	prcm_addr[0x60 / 4] = 0x2; //CM_PER_L4LS_CLKCTRL, p 1182, all l4ls peripheral clocks. 
+	prcm_addr[0x88 / 4] = 0x2; //enable timer4. page 1191, CM_PER_TIMER4_CLKCTRL
+	prcm_addr[0xd4 / 4] = 0x2; //enable epwmss0. page 1199, CM_PER_EPWMSS0_CLKCTRL
+	prcm_addr[0xac / 4] = 0x40002; //enable GPIO1. page 1192, CM_PER_GPIO1_CLKCTRL
+	prcm_addr[0x120 / 4] = 0x2; //enable L4HS clock, page 1214, CM_PER_L4HS_CLKCTRL (should be enabled already)
+	printf("CM_PER_L4LS_CLKSTCTRL = 0x%x\n", prcm_addr[0]); // page 1163.
+	printf("CM_PER_L4HS_CLKSTCTRL = 0x%x\n", prcm_addr[0x11c / 4]); //see?  enabled..
 	
 	gpio_addr[0x134 / 4] &= 0xffffffff ^ ((0x1 << 4) | (0x1 << 5)); //enable output (should enabled by setup.sh) 
 	printf("GPIO0_REV 0x%X\n", gpio_addr[0]); 
@@ -150,7 +166,6 @@ int main (int argc, char const *argv[])
 	printf("TIMER4_TCLR 0x%X\n", timer_addr[0x38 / 4]); 
 	printf("TIMER4_TCRR 0x%X\n", timer_addr[0x3c / 4]);  //counter register. 
 	printf("TIMER4_TLDR 0x%X\n", timer_addr[0x40 / 4]); //load on overflow; defalut to zero. 
-	fflush(stdout);
 	timer_addr[0x10 / 4] = 0xa; //1010, smart-idle, emufree, no reset.
 	timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR. 
 	timer_addr[0x38 / 4] = 0x3 ; //0000 0000 0000 0011
