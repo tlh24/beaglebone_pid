@@ -218,16 +218,19 @@ int main (int argc, char const *argv[])
 	pwm_addr = (uint16_t*)(eqep.getPWMSSPointer() + 0x200); //got the offset from the device tree.
 	//note indexing as shorts. 
 	pwm_addr[0] = 0; // up count mode. 
-	pwm_addr[5] = 5000; // 20kHz from the 100Mhz clock.
-	pwm_addr[9] = 2500; // 50% duty cycle.
+	pwm_addr[5] = 5000; // PRD. 20kHz from the 100Mhz clock.
+	pwm_addr[7] = 0x0; // CMPCTL.  enable shadowm load when counter=0. 
+	pwm_addr[9] = 2500; //CMPA. 50% duty cycle.
+	pwm_addr[11] = 0x12;  // set when the couner=0; clear when counter = CMPA
+ 	pwm_addr[12] = 0; //disable output B. 
 	printf("PWM TBCTL 0x%X\n", pwm_addr[0]); 
 	printf("PWM TBSTS 0x%X\n", pwm_addr[1]); 
 	printf("PWM TBCNT 0x%X\n", pwm_addr[4]); 
 	printf("PWM TBPRD 0x%X (%d)\n", pwm_addr[5], pwm_addr[5]); 
-	printf("PWM CMPCTL 0x%X\n", pwm_addr[6]); 
+	printf("PWM CMPCTL 0x%X\n", pwm_addr[7]); 
 	printf("PWM CMPA 0x%X (%d)\n", pwm_addr[9], pwm_addr[9]);
 	printf("PWM CMPB 0x%X (%d)\n", pwm_addr[10], pwm_addr[10]);  
-	
+	printf("PWM AQCTLA 0x%X\n", pwm_addr[11]); 
 	//pwm_addr[9] = 200; //works!!  sets the duty cycle!
 
 	//time a read-loop to assess speed
