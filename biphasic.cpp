@@ -43,7 +43,7 @@ uint32_t* prcm_addr = 0;
 
 uint32_t saved[0x1000/4]; 
 
-//need to mmap the gpio registers as well. 
+//using mmap as a general-purpose mechanism for accessing system registers from userspace.
 uint32_t* map_register(uint32_t base_addr, uint32_t len){
 	int masked_address = base_addr & ~(getpagesize()-1);
 	uint32_t* addr = (uint32_t*)mmap(NULL, len,
@@ -161,7 +161,8 @@ int main (int argc, char const *argv[])
 	prcm_addr[0xd4 / 4] = 0x2; //enable epwmss0. page 1199, CM_PER_EPWMSS0_CLKCTRL
 	prcm_addr[0xac / 4] = 0x2; //enable GPIO1. page 1192, CM_PER_GPIO1_CLKCTRL
 	prcm_addr[0x120 / 4] = 0x2; //enable L4HS clock, page 1214, CM_PER_L4HS_CLKCTRL (should be enabled already)
-	printf("CM_PER_L4LS_CLKSTCTRL = 0x%x\n", prcm_addr[0x11c / 4]); //see?  enabled..
+	printf("CM_PER_L4LS_CLKSTCTRL = 0x%x\n", prcm_addr[0]); //see?  enabled..
+	printf("CM_PER_L4HS_CLKSTCTRL = 0x%x\n", prcm_addr[0x11c / 4]); //see?  enabled..
 	
 	printf("mapping control register...\n"); 	
 	map_control_register(); 
@@ -170,14 +171,14 @@ int main (int argc, char const *argv[])
 		printf(" .. looks OK\n"); 
 	control_addr[0x644 / 4] = 0x7; //enable all pwmss function clocks.
 	control_addr[0x95c / 4] = 0xf; //P9.17 mode 7 (gpio0) pinmux, pull up/down disabled
-	control_addr[0x958 / 4] = 0xf; //P9.18 mode 7 (gpio0) pinmux, pull up/down disabled
+	control_addr[0x958 / 4] = 0x2b; //P9.18 mode 7 (gpio0) pinmux, pull up/down disabled
 	control_addr[0x950 / 4] = 0xb; //P9.22 mode 3 (PWM) pulldown off, fast slew, rx inactive. 
 	printf("pin P9.17 0x%X\n", control_addr[0x95c / 4]);
 
 	map_gpio0_register(); 
 	gpio_addr[0x134 / 4] &= 0xffffffff ^ ((0x1 << 4) | (0x1 << 5)); //enable output drivers
 	printf("GPIO0_REV 0x%X", gpio_addr[0]); 
-	if(gpio_addr[0x600 / 4] == 0x50600801) 
+	if(gpio_addr[0x134 / 4] == 0x50600801) 
 		printf(" .. looks OK\n"); 
 	printf("GPIO0_OE 0x%X\n", gpio_addr[0x134 / 4]); 
 	printf("GPIO0_DI 0x%X\n", gpio_addr[0x138 / 4]); 
