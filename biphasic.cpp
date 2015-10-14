@@ -167,6 +167,8 @@ int main (int argc, char const *argv[])
 	control_addr[0x950 / 4] = 0xf; //***P9.22 mode 3 (PWM) pulldown off, fast slew, rx inactive. 
 	control_addr[0x84c / 4] = 0xf; //P9.16 mode 7 (gpio1) pulldown off, fast slew, rx inactive. 
 	printf("pin P9.17 0x%X\n", control_addr[0x95c / 4]);
+	printf("pin P9.22 0x%X\n", control_addr[0x950 / 4]);
+	printf("pin P9.16 0x%X\n", control_addr[0x84c / 4]);
 	printf("pwmss_ctrl 0x%X\n", control_addr[0x664 / 4]);
 
 	gpio_addr[0x134 / 4] &= 0xffffffff ^ ((0x1 << 2) | (0x1 << 4) | (0x1 << 5)); //enable output 
