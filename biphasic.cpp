@@ -48,7 +48,7 @@ uint32_t saved[0x1000/4];
 uint32_t* map_register(uint32_t base_addr, uint32_t len){
 	int masked_address = base_addr & ~(getpagesize()-1);
 	uint32_t* addr = (uint32_t*)mmap(NULL, len,
-		PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, mem_fd, masked_address);
+		PROT_READ | PROT_WRITE, MAP_SHARED | MAP_LOCKED, mem_fd, masked_address);
 	if (addr == MAP_FAILED )
 	{
 		printf("Memory Mapping failed for 0x%04x register\n", masked_address);
