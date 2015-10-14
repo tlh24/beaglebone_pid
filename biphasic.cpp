@@ -46,17 +46,15 @@ uint32_t saved[0x1000/4];
 
 //using mmap as a general-purpose mechanism for accessing system registers from userspace.
 uint32_t* map_register(uint32_t base_addr, uint32_t len){
-	int masked_address = base_addr & ~(getpagesize()-1);
 	uint32_t* addr = (uint32_t*)mmap(NULL, len,
-		PROT_READ | PROT_WRITE, MAP_SHARED | MAP_LOCKED, mem_fd, masked_address);
+		PROT_READ | PROT_WRITE, MAP_SHARED , mem_fd, base_addr);
 	if (addr == MAP_FAILED )
 	{
-		printf("Memory Mapping failed for 0x%04x register\n", masked_address);
+		printf("Memory Mapping failed for 0x%04x register\n", base_addr);
 		printf("ERROR: (errno %d)\n", errno);
 		return 0;
 	}
-	printf("address 0x%08x memmapped\n",
-		masked_address);
+	printf("address 0x%08x memmapped\n", base_addr);
 	return addr; 
 }
 
