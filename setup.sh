@@ -12,7 +12,7 @@ config-pin P9.42 in
 config-pin P9.92 qep
 config-pin P9.22 pwm
 config-pin P9.17 out
-config-pin P9.17 out
+config-pin P9.18 out
 
 #export to userspace. 
 echo 0 > /sys/class/pwm/pwmchip0/export 
