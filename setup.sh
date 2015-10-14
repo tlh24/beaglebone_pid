@@ -10,8 +10,8 @@ config-pin P9.91 qep
 config-pin P9.42 in
 config-pin P9.92 qep
 config-pin P9.22 pwm
-config-pin P9.15 out
-config-pin P9.16 out
+config-pin P9.17 out
+config-pin P9.18 out
 
 echo 0 > /sys/class/pwm/export
 echo 50000 > /sys/class/pwm/pwm0/period_ns
@@ -19,7 +19,7 @@ echo 0 > /sys/class/pwm/pwm0/duty_ns
 echo 1 > /sys/class/pwm/pwm0/run
 #20kHz. enabled, but no pulses.
 
-#export gpio for P9.15 and P9.16 (forward and reverse)
+#export gpio for P9.17 and P9.18 (forward and reverse)
 echo 48 > /sys/class/gpio/export
 echo 51 > /sys/class/gpio/export
 
