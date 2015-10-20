@@ -14,7 +14,8 @@ config-pin P9.22 pwm
 config-pin P9.17 out
 config-pin P9.18 out
 
-#export to userspace. 
+sleep 1
+#export to userspace. (this should not fail with a write error)
 echo 0 > /sys/class/pwm/pwmchip0/export 
 # echo 0 > /sys/class/pwm/export # kernel 3.8
 echo 50000 > /sys/class/pwm/pwmchip0/pwm0/period
@@ -22,18 +23,19 @@ echo 500 > /sys/class/pwm/pwmchip0/pwm0/duty_cycle
 echo 1 > /sys/class/pwm/pwmchip0/pwm0/enable
 echo on > /sys/class/pwm/pwmchip0/pwm0/power/control
 #20kHz. enabled
+#(but does not seem to output a pwm until the code is  run)
 
 #export gpio for P9.17 and P9.18 (forward and reverse)
 echo 5 > /sys/class/gpio/export
 echo 4 > /sys/class/gpio/export
 
-echo out > /sys/class/gpio/gpio48/direction
-echo out > /sys/class/gpio/gpio51/direction
+echo out > /sys/class/gpio/gpio5/direction
+echo out > /sys/class/gpio/gpio4/direction
 
 #turn on timer1. (timer0 is the 32kHz RTC)
-echo on > /sys/devices/ocp.3/48044000.timer/power/control
+echo on > /sys/devices/platform/ocp/48044000.timer/power/control
 # timer is used for high-speed internal interval timing. 
-echo on > /sys/devices/ocp.3/4804c000.gpio/power/control
+echo on > /sys/devices/platform/ocp/4804c000.gpio/power/control
 
 # code only works with gcc 4.7+
 if 0 ; then
