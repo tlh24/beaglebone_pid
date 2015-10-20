@@ -230,12 +230,12 @@ int main (int argc, char const *argv[])
 
 	//calc clock rate. 
 	printf("timer1 clock rate %f Mhz\n", (float)timer1_s / ((float)dt_micros)); 
-	motor_setPWM(0.01); 
+	motor_setPWM(0.02); 
 	motor_forward(); 
 	int sta = eqep.getPosition(); 
 	sleep(1); 
 	int dd = eqep.getPosition() - sta; 
-	if(dd < 0){
+	if(dd <= 0){
 	 printf("Motor polarity looks reversed, %d.  Check your wiring.\n", dd); 
 	 cleanup(); 
 	 return 0; 
@@ -247,7 +247,7 @@ int main (int argc, char const *argv[])
 	sta = eqep.getPosition(); 
 	sleep(1); 
 	dd = eqep.getPosition() - sta; 
-	if(dd > 0){
+	if(dd >= 0){
 	 printf("Motor polarity looks reversed, %d.  Check your wiring.\n", dd); 
 	 cleanup(); 
 	 return 0; 
