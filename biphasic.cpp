@@ -197,7 +197,7 @@ int main (int argc, char const *argv[])
 	pwm_addr[9] = 2500; //CMPA. 50% duty cycle.
 	pwm_addr[11] = 0x12;  // set when the counter = 0; clear when counter = CMPA
  	pwm_addr[12] = 0; //disable output B. 
- 	pwm_addr[0] = 0xc0; // up count mode, software sync.
+ 	pwm_addr[0] = 0xc8; // up count mode, software sync.
 	printf("PWM TBCTL 0x%X (0xC0)\n", pwm_addr[0]); 
 	printf("PWM TBSTS 0x%X (0x1)\n", pwm_addr[1]); 
 	printf("PWM TBCNT 0x%X (not zero)\n", pwm_addr[4]); 

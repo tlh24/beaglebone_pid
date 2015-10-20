@@ -7,7 +7,7 @@ echo cape-universaln > /sys/devices/platform/bone_capemgr/slots
 
 config-pin P9.27 qep # quadrature B. 
 # config-pin P9.41 in # seems to have a 32kHz clock on it these days.
-config-pin P9.91 qep # index -- disable pinmux? no index signal to ocp.
+config-pin P9.91 gpio # quadrature index-- disable pinmux, so no index signal to decoder.
 config-pin P9.42 in
 config-pin P9.92 qep # quadrature A. 
 config-pin P9.22 pwm
