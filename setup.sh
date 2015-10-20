@@ -7,9 +7,9 @@ echo cape-universaln > /sys/devices/platform/bone_capemgr/slots
 
 config-pin P9.27 qep
 #config-pin P9.41 in
-config-pin P9.91 qep
+config-pin P9.91 qep # index
 #config-pin P9.42 in
-config-pin P9.92 qep
+config-pin P9.92 qep # quadrature B
 config-pin P9.22 pwm
 config-pin P9.17 out
 config-pin P9.18 out
