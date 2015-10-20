@@ -240,7 +240,7 @@ int main (int argc, char const *argv[])
 	 cleanup(); 
 	 return 0; 
 	}else{
-		printf("Motor forward direction looks OK.\n"); 
+		printf("Motor forward direction looks OK: %d\n", dd); 
 	}
 	int fin = eqep.getPosition(); 
 	motor_reverse(); 
@@ -252,13 +252,13 @@ int main (int argc, char const *argv[])
 	 cleanup(); 
 	 return 0; 
 	}else{
-		printf("Motor reverse direction looks OK.\n"); 
+		printf("Motor reverse direction looks OK: %d\n", dd); 
 	}
 	sta = eqep.getPosition();  //top of cylinder
 	motor_forward(); 
 	sleep(1); 
 	fin = eqep.getPosition(); //bottom of cylinder, retract. 
-	
+	printf("top of cylinder: %d bottom: %d delta: %d\n", sta, fin, sta-fin); 
 	//try a negative step ('up')
 	//full-speed acceleration to midpoint of trajectory. 
 	float t = 0.f; 
