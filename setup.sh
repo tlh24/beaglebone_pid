@@ -25,7 +25,7 @@ echo on > /sys/class/pwm/pwmchip0/pwm0/power/control
 #20kHz. enabled
 #(but does not seem to output a pwm until the code is  run)
 # below, however, does (on kernel 4.1.9-bone-rt-r16
-PWM=/sys/devices/platform/ocp/48300000.epwmss/48300200.ehrpwm/pwm/pwmchip2
+PWM=/sys/devices/platform/ocp/48300000.epwmss/48300200.ehrpwm/pwm/pwmchip?
 # i do not know why it's pwmchip2 ... 
 echo 0 > $PWM/export
 echo 50000 > $PWM/pwm0/period
