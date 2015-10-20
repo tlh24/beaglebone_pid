@@ -7,7 +7,7 @@ echo cape-universaln > /sys/devices/platform/bone_capemgr/slots
 
 config-pin P9.27 qep # quadrature B. 
 # config-pin P9.41 in # seems to have a 32kHz clock on it these days.
-config-pin P9.91 qep # index -- disable pinmux? no index signal to ocp.
+config-pin P9.91 gpio # quadrature index-- disable pinmux, so no index signal to decoder.
 config-pin P9.42 in
 config-pin P9.92 qep # quadrature A. 
 config-pin P9.22 pwm
@@ -25,7 +25,7 @@ echo on > /sys/class/pwm/pwmchip0/pwm0/power/control
 #20kHz. enabled
 #(but does not seem to output a pwm until the code is  run)
 # below, however, does (on kernel 4.1.9-bone-rt-r16
-PWM=/sys/devices/platform/ocp/48300000.epwmss/48300200.ehrpwm/pwm/pwmchip2
+PWM=/sys/devices/platform/ocp/48300000.epwmss/48300200.ehrpwm/pwm/pwmchip?
 # i do not know why it's pwmchip2 ... 
 echo 0 > $PWM/export
 echo 50000 > $PWM/pwm0/period
