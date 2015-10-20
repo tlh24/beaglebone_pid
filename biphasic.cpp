@@ -230,7 +230,7 @@ int main (int argc, char const *argv[])
 
 	//calc clock rate. 
 	printf("timer1 clock rate %f Mhz\n", (float)timer1_s / ((float)dt_micros)); 
-	motor_setPWM(0.016); 
+	motor_setPWM(0.02); 
 	motor_forward(); 
 	int sta = eqep.getPosition(); 
 	sleep(1); 
