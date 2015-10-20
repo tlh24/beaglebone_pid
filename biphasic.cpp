@@ -57,12 +57,12 @@ uint32_t* map_register(uint32_t base_addr, uint32_t len){
 }
 
 void motor_forward(){
-	gpio_addr[0x190 / 4] = 0x1 << 5; //clear data out
-	gpio_addr[0x194 / 4] = 0x1 << 4; //set data out
-}
-void motor_reverse(){
 	gpio_addr[0x190 / 4] = 0x1 << 4; //clear data out
 	gpio_addr[0x194 / 4] = 0x1 << 5; //set data out
+}
+void motor_reverse(){
+	gpio_addr[0x190 / 4] = 0x1 << 5; //clear data out
+	gpio_addr[0x194 / 4] = 0x1 << 4; //set data out
 }
 void motor_stop(){
 	gpio_addr[0x190 / 4] = 0x1 << 4; //clear data out
