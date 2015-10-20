@@ -344,11 +344,11 @@ int main (int argc, char const *argv[])
 	}
 	FILE* dat_fd = fopen("pid.dat", "w"); 
 	for(int j=0; j<savn; j++){
-			for(int k=0; k<5; k++){
-				fprintf(dat_fd, "%e\t", sav[j*5+k]); 
-			fprintf(dat_fd, "\n"); 
+		for(int k=0; k<5; k++){
+			fprintf(dat_fd, "%e\t", sav[j*5+k]); 
 		}
-	};
+		fprintf(dat_fd, "\n"); 
+	}
 	fclose(dat_fd); 
 	free(sav); 
 
