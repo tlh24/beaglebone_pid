@@ -5,11 +5,11 @@ echo cape-universaln > /sys/devices/platform/bone_capemgr/slots
 # echo bone_eqep0 > /sys/devices/bone_capemgr.9/slots
 # this will also pinmux P9.22 to pwm0A function.
 
-config-pin P9.27 qep
-#config-pin P9.41 in
-config-pin P9.91 qep # index
-#config-pin P9.42 in
-config-pin P9.92 qep # quadrature B
+config-pin P9.27 qep # quadrature B. 
+# config-pin P9.41 in # seems to have a 32kHz clock on it these days.
+config-pin P9.91 qep # index -- disable pinmux? no index signal to ocp.
+config-pin P9.42 in
+config-pin P9.92 qep # quadrature A. 
 config-pin P9.22 pwm
 config-pin P9.17 out
 config-pin P9.18 out
