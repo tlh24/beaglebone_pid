@@ -6,9 +6,9 @@ echo cape-universaln > /sys/devices/platform/bone_capemgr/slots
 # this will also pinmux P9.22 to pwm0A function.
 
 config-pin P9.27 qep # quadrature B. 
-# config-pin P9.41 in # seems to have a 32kHz clock on it these days.
+# config-pin P9.41 in # seems to have a 32kHz clock on it these days (kernel 4.1.9)
 config-pin P9.91 gpio # quadrature index-- disable pinmux, so no index signal to decoder.
-config-pin P9.42 in
+config-pin P9.42 in # don't drive this pin, which is connected to below.
 config-pin P9.92 qep # quadrature A. 
 config-pin P9.22 pwm
 config-pin P9.17 out

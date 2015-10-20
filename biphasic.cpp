@@ -230,7 +230,7 @@ int main (int argc, char const *argv[])
 
 	//calc clock rate. 
 	printf("timer1 clock rate %f Mhz\n", (float)timer1_s / ((float)dt_micros)); 
-	motor_setPWM(0.02); 
+	motor_setPWM(0.018); 
 	motor_forward(); 
 	int sta = eqep.getPosition(); 
 	sleep(1); 
@@ -305,12 +305,6 @@ int main (int argc, char const *argv[])
 		sav[savn*5+4] = dr; 
 		savn++; 
 	};
-	
-	motor_setPWM(0.0);
-	while(x < 500 && x > -500){
-		update_velocity(0, 0.1); 
-		printf("encoder: %d\n", x); 
-	}
 	
 	for(int j=0; j<1; j++){
 		timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR.
