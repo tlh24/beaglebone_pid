@@ -148,7 +148,7 @@ int main (int argc, char const *argv[])
 	printf("CM_PER_L4LS_CLKSTCTRL = 0x%x\n", prcm_addr[0]); // page 1163.
 	printf("CM_PER_L4HS_CLKSTCTRL = 0x%x\n", prcm_addr[0x11c / 4]); //see?  enabled..
 	
-	gpio_addr[0x134 / 4] &= 0xffffffff ^ ((0x1 << 4) | (0x1 << 5)); //enable output (should enabled by setup.sh) 
+	gpio_addr[0x134 / 4] &= 0xffffffff ^ ((0x1 << 4) | (0x1 << 5)); //enable output (should be already ./testenabled by setup.sh) 
 	printf("GPIO0_REV 0x%X\n", gpio_addr[0]); 
 	if(gpio_addr[0] == 0x50600801) 
 		printf(" .. looks OK\n"); 
@@ -198,14 +198,14 @@ int main (int argc, char const *argv[])
 	pwm_addr[11] = 0x12;  // set when the counter = 0; clear when counter = CMPA
  	pwm_addr[12] = 0; //disable output B. 
  	pwm_addr[0] = 0xc0; // up count mode, software sync.
-	printf("PWM TBCTL 0x%X\n", pwm_addr[0]); 
-	printf("PWM TBSTS 0x%X\n", pwm_addr[1]); 
-	printf("PWM TBCNT 0x%X\n", pwm_addr[4]); 
-	printf("PWM TBPRD 0x%X (%d)\n", pwm_addr[5], pwm_addr[5]); 
-	printf("PWM CMPCTL 0x%X\n", pwm_addr[7]); 
+	printf("PWM TBCTL 0x%X (0xC0)\n", pwm_addr[0]); 
+	printf("PWM TBSTS 0x%X (0x1)\n", pwm_addr[1]); 
+	printf("PWM TBCNT 0x%X (not zero)\n", pwm_addr[4]); 
+	printf("PWM TBPRD 0x%X (%d) \n", pwm_addr[5], pwm_addr[5]); 
+	printf("PWM CMPCTL 0x%X (0x0)\n", pwm_addr[7]); 
 	printf("PWM CMPA 0x%X (%d)\n", pwm_addr[9], pwm_addr[9]);
 	printf("PWM CMPB 0x%X (%d)\n", pwm_addr[10], pwm_addr[10]);  
-	printf("PWM AQCTLA 0x%X\n", pwm_addr[11]); 
+	printf("PWM AQCTLA 0x%X (0x12)\n", pwm_addr[11]); 
 	//pwm_addr[9] = 200; //works!!  sets the duty cycle!
 
 	//time a read-loop to assess speed
