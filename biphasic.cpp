@@ -396,15 +396,16 @@ int main (int argc, char const *argv[])
 		printf("bottom  %d was %d\n", eqep.getPosition(), cylbot); 
 		cylbot = eqep.getPosition();
 	}
-	//unlock all memory, reinstate DMA (needed for writing to disk)
+	//unlock all memory, reinstate DMA (apparently, needed for writing to disk)
 	cleanup(); 
 	printf("writing out data record (%d)..\n", savn); 
 	FILE* dat_fd = fopen("pid.dat", "w"); 
-	for(int j=0; j<savn; j++){
+	for(int j=0; j<savn && j < 2e5; j++){
 		for(int k=0; k<5; k++){
 			fprintf(dat_fd, "%e\t", sav[j*5+k]); 
 		}
 		fprintf(dat_fd, "\n"); 
+		fflush(dat_fd); 
 	}
 	fclose(dat_fd); 
 	free(sav); 
