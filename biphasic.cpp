@@ -209,6 +209,7 @@ int main (int argc, char const *argv[])
 	//pwm_addr[9] = 200; //works!!  sets the duty cycle!
 
 	//time a read-loop to assess speed
+	timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR. 
 	int num_reads = 1000000;
 	int i;
 	gettimeofday(&tv1,NULL);
@@ -322,14 +323,17 @@ int main (int argc, char const *argv[])
 			update_velocity(n, 0.1);
 			if(t < 0.008){
 				dr = 1.0; //compress the spring down
-			}else if(t < 0.016 || x > -1000){
-				if(x > -300) dr = -1.0; //drive up
+			}else if(t < 0.016 || x > -800){
+				if(x > 0) dr = -1.0; //drive up.  near peak velocity @ crossing.
 				else dr = -0.03; //coast up
 			}else if(t < 0.030){
-				if(v < -300*200)
+				if(v < -500*200){
 					dr = 0.06; //decelerate down
-				else 
+				}else if(v < -100*200){
 					dr = 0.018; // decelerate less
+				} else{
+					dr = 0.0; 
+				}
 			}else{
 				dr = -0.004; //hold (up)
 			}
