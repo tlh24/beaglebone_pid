@@ -360,7 +360,7 @@ int main (int argc, char const *argv[])
 		}
 		n = 0; 
 		update_velocity(0, 0.0); //updates the time.
-		while(t < 0.1){
+		while(t < 0.08){
 			update_velocity(n, 0.07);
 			if(t < 0.0075){
 				dr = 1.0; //compress the spring down; stop just before it maxes out
@@ -380,14 +380,17 @@ int main (int argc, char const *argv[])
 			save_dat(); 
 			n++; 
 		}
-		//reset motor positon. 
-		motor_setDrive(-0.05); 
+		int stoppos = eqep.getPosition(); 
+		//reset motor positon (should be no skipped counts; motion is slow)
+		motor_setDrive(-0.04); 
 		sleep(1); 
-		printf("top of cylinder %d was %d\n", eqep.getPosition(), cyltop); 
-		cyltop = eqep.getPosition(); 
-		motor_setDrive(0.05); 
+		int newtop = eqep.getPosition(); //all the way retracted.
+		printf("# stopped at %d, top at %d, delta %d\n", stoppos, newtop, stoppos - newtop);  
+		printf("top  %d was %d\ ; ", newtop, cyltop); 
+		cyltop = newtop; 
+		motor_setDrive(0.04); 
 		sleep(1); 
-		printf("bottom of cylinder %d was %d\n", eqep.getPosition(), cylbot); 
+		printf("bottom  %d was %d\n", eqep.getPosition(), cylbot); 
 		cylbot = eqep.getPosition();
 	}
 	//unlock all memory. 
