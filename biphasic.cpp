@@ -368,10 +368,10 @@ int main (int argc, char const *argv[])
 				if(x > cylbot - cyltop) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
 				else dr = -0.1; //coast up
 			}else if(t < 0.028){
-				if(v < -50*200){
+				if(v < -75*200){
 					dr = -0.7 * v / (600.0*200.0); 
 				}else{
-					dr = -0.014; //retract slowly
+					dr = -0.016; //retract slowly
 				}
 			}else{
 				dr = -0.017; //hold (up)
