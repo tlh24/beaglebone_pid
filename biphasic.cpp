@@ -267,9 +267,9 @@ int main (int argc, char const *argv[])
 	printf("timer1 clock rate %f Mhz\n", (float)timer1_s / ((float)dt_micros)); 
 	
 	//calibrate friction point. 
+	//slug starts at bottom.
 	int st = eqep.getPosition();
-	float friction = 0.003; 
-	motor_setDrive(-1.0*friction); 
+	float friction = 0.0; 
 	while(eqep.getPosition() - st > -25 && friction <= 0.1){
 		friction += 0.005; 
 		motor_setDrive(-1.0*friction); 
