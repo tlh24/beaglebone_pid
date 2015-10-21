@@ -151,6 +151,7 @@ void cleanup(){
 	munmap(pwmss_addr, 0x1000); 
 	munmap(prcm_addr, 0x1000); 
 	close (mem_fd); 
+	munlockall();
 	/* close the latency_target_fd if it's open */
 	if (latency_target_fd >= 0)
 		close(latency_target_fd);
@@ -395,9 +396,8 @@ int main (int argc, char const *argv[])
 		printf("bottom  %d was %d\n", eqep.getPosition(), cylbot); 
 		cylbot = eqep.getPosition();
 	}
-	//unlock all memory. 
-	munlockall();
-	motor_setDrive(0.0); 
+	//unlock all memory, reinstate DMA (needed for writing to disk)
+	cleanup(); 
 	printf("writing out data record (%d)..\n", savn); 
 	FILE* dat_fd = fopen("pid.dat", "w"); 
 	for(int j=0; j<savn; j++){
@@ -409,6 +409,5 @@ int main (int argc, char const *argv[])
 	fclose(dat_fd); 
 	free(sav); 
 	printf("\t.. done\n"); 
-	cleanup(); 
 	return 0;
 }
