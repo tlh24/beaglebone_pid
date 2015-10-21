@@ -311,12 +311,13 @@ int main (int argc, char const *argv[])
 	for(int j=0; j<1; j++){
 		timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR.
 		//the reload may take a little bit ...
-		// compress the spring. 
-		t = get_time(); 
-		printf("start time %f\n", t); //dummy wait / syscall.
-		t = get_time(); 
+		int pt = get_time(); 
+		t = pt; 
+		while(t - pt >= 0.0){
+			update_velocity(0, 0.0);
+		}
 		n = 0; 
-		update_velocity(0, 0.0);
+		update_velocity(0, 0.0); //updates the time.
 		while(t < 0.1){
 			update_velocity(n, 0.1);
 			if(t < 0.008){
