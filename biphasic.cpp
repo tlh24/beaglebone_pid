@@ -76,7 +76,7 @@ void motor_stop(){
 	gpio_addr[0x190 / 4] = 0x1 << 5; //clear data out
 }
 void motor_setPWM(float duty){
-	pwm_addr[9] = (int)(duty * 3333.0); 
+	pwm_addr[9] = (int)(duty * 2000.0); 
 	//30kHz PWM cycle. 
 }
 void motor_setDrive(float dr){
@@ -230,7 +230,7 @@ int main (int argc, char const *argv[])
 	//enable the PWM module associated with this eQEP. 
 	pwm_addr = (uint16_t*)(pwmss_addr + (0x200/4)); //got the offset from the device tree.
 	//note indexing as shorts. 
-	pwm_addr[5] = 3333; // PRD. 30kHz from the 100Mhz clock.
+	pwm_addr[5] = 2000; // PRD. 20kHz from the 100Mhz clock.
 	pwm_addr[7] = 0x0; // CMPCTL.  enable shadowm load when counter=0. 
 	pwm_addr[9] = 166; //CMPA. 5% duty cycle.
 	pwm_addr[11] = 0x12;  // set when the counter = 0; clear when counter = CMPA
