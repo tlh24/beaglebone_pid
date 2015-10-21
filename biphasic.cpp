@@ -280,8 +280,10 @@ int main (int argc, char const *argv[])
 		//20MB .. should be more than enough. 
 	int savn = 0; 
 	auto update_velocity = [&] (int nn, float lerp) -> void {
-		t = get_time(); 
+		float t1 = get_time(); 
 		x = eqep.getPosition() - fin;
+		float t2 = get_time();
+		t = (t1 + t2) / 2.0;
 		if(nn == 0){
 			x_old = x; 
 			t_vold = t; 
