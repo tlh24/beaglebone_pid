@@ -367,11 +367,11 @@ int main (int argc, char const *argv[])
 			if(t < 0.0075){
 				dr = 1.0; //compress the spring down; stop just before it maxes out
 			}else if(t < 0.016 || x > -800){
-				if(x > 0) dr = -1.0; //drive up.  near peak velocity @ crossing.
+				if(x > 0) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
 				else dr = -0.1; //coast up
 			}else if(t < 0.030){
 				if(v < -100*200){
-					dr = -0.18 * v / (600.0*200.0); 
+					dr = -0.10 * v / (600.0*200.0); 
 				}else{
 					dr = 0.0; 
 				}

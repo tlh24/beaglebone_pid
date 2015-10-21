@@ -35,8 +35,8 @@ echo 500 > $PWM/pwm0/duty_cycle
 echo 1 > $PWM/pwm0/enable
 
 #export gpio for P9.17 and P9.18 (forward and reverse)
-echo 5 > /sys/class/gpio/export
-echo 4 > /sys/class/gpio/export
+# echo 5 > /sys/class/gpio/export
+# echo 4 > /sys/class/gpio/export
 
 echo out > /sys/class/gpio/gpio5/direction
 echo out > /sys/class/gpio/gpio4/direction
@@ -47,8 +47,8 @@ echo on > /sys/devices/platform/ocp/48044000.timer/power/control
 echo on > /sys/devices/platform/ocp/4804c000.gpio/power/control
 
 # code only works with gcc 4.7+
-if 0 ; then
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.6 60 --slave /usr/bin/g++ g++ /usr/bin/g++-4.6 
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.7 40 --slave /usr/bin/g++ g++ /usr/bin/g++-4.7 
-sudo update-alternatives --config gcc
-fi
+# if 0 ; then
+# sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.6 60 --slave /usr/bin/g++ g++ /usr/bin/g++-4.6 
+# sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.7 40 --slave /usr/bin/g++ g++ /usr/bin/g++-4.7 
+# sudo update-alternatives --config gcc
+# fi
