@@ -370,11 +370,11 @@ int main (int argc, char const *argv[])
 				else dr = -0.1; //coast up
 			}else if(t < 0.03){
 				if(v < -75*200){
-					dr = -0.8 * v / (600.0*200.0); 
+					dr = -0.7 * v / (600.0*200.0); 
 				}else{
 					if(stoppos <= -100000)
 						stoppos = eqep.getPosition(); 
-					dr = -0.85*friction; //retract(slowly)
+					dr = -0.8*friction; //retract(slowly)
 				}
 			}else{
 				dr = -0.9*friction; //hold (up)
