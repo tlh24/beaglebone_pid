@@ -281,10 +281,8 @@ int main (int argc, char const *argv[])
 	int savn = 0; 
 	auto update_velocity = [&] (int nn, float lerp) -> void {
 		float t1 = get_time(); 
-		int x1 = eqep.getPosition() - fin;
+		int x = eqep.getPosition() - fin;
 		float t2 = get_time();
-		int x2 = eqep.getPosition() - fin;
-		x = (x1 + x2) / 2; 
 		t = (t1 + t2) / 2.0;
 		if(nn == 0){
 			x_old = x; 

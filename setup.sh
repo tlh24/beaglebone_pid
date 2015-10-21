@@ -27,6 +27,7 @@ echo on > /sys/class/pwm/pwmchip0/pwm0/power/control
 # below, however, does (on kernel 4.1.9-bone-rt-r16
 PWM=/sys/devices/platform/ocp/48300000.epwmss/48300200.ehrpwm/pwm/pwmchip?
 # i do not know why it's pwmchip2 ... 
+sleep 1
 echo 0 > $PWM/export
 echo 50000 > $PWM/pwm0/period
 echo 500 > $PWM/pwm0/duty_cycle
