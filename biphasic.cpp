@@ -350,7 +350,7 @@ int main (int argc, char const *argv[])
 		cleanup(); 
 		return 0; 
 	}
-	for(int j=0; j<20; j++){
+	for(int j=0; j<10; j++){
 		timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR.
 		//the reload may take a little bit ...
 		int pt = get_time(); 
@@ -365,7 +365,7 @@ int main (int argc, char const *argv[])
 			update_velocity(n, 0.07);
 			if(t < 0.0075){
 				dr = 1.0; //compress the spring down; stop just before it maxes out
-			}else if(t < 0.015 && x > 300){
+			}else if(t < 0.015 && x > 400){
 				if(x > cylbot - cyltop) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
 				else dr = -0.1; //coast up
 			}else if(t < 0.03){
