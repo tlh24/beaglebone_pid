@@ -327,10 +327,12 @@ int main (int argc, char const *argv[])
 				if(x > 0) dr = -1.0; //drive up.  near peak velocity @ crossing.
 				else dr = -0.03; //coast up
 			}else if(t < 0.030){
-				if(v < -500*200){
-					dr = 0.06; //decelerate down
-				}else if(v < -100*200){
-					dr = 0.018; // decelerate less
+				if(v < -600*200){
+					dr = 0.05; //decelerate down
+				}else if(v < -300*200){
+					dr = 0.025; // decelerate less
+				}else if(v < -150*200){
+					dr = 0.013; // decelerate less
 				} else{
 					dr = 0.0; 
 				}
