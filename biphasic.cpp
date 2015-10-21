@@ -350,7 +350,7 @@ int main (int argc, char const *argv[])
 		cleanup(); 
 		return 0; 
 	}
-	for(int j=0; j<10; j++){
+	for(int j=0; j<20; j++){
 		timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR.
 		//the reload may take a little bit ...
 		int pt = get_time(); 
