@@ -268,10 +268,10 @@ int main (int argc, char const *argv[])
 	
 	//calibrate friction point. 
 	int st = eqep.getPosition();
-	float friction = 0.03; 
+	float friction = 0.003; 
 	motor_setDrive(friction); 
 	while(eqep.getPosition() - st < 25 && friction <= 0.1){
-		friction += 0.05; 
+		friction += 0.005; 
 		motor_setDrive(friction); 
 		usleep(500000); 
 	}
