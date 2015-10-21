@@ -75,15 +75,12 @@ void motor_stop(){
 	gpio_addr[0x190 / 4] = 0x1 << 4; //clear data out
 	gpio_addr[0x190 / 4] = 0x1 << 5; //clear data out
 }
-void motor_setPWM(float duty){
-	pwm_addr[9] = (int)(duty * 2000.0); 
-	//25kHz PWM cycle. 
-}
 void motor_setDrive(float dr){
 	if(dr < 0.0) motor_reverse(); 
 	if(dr > 0.0) motor_forward();
 	if(dr == 0.0) motor_stop(); 
-	motor_setPWM(fabs(dr)); 
+	pwm_addr[9] = (int)(fabs(dr) * 2000.0); 
+	//25kHz PWM cycle. 
 }
 //simple step test, constant acceleration and deceleration. 
 //returns the desired position.
@@ -146,7 +143,7 @@ static void set_latency_target(void){
 
 void cleanup(){
 	motor_stop(); 
-	motor_setPWM(0.0); 
+	motor_setDrive(0.0); 
 	munmap(gpio_addr, 0x200);
 	munmap(timer_addr, 0x200);
 	munmap(pwmss_addr, 0x1000); 
@@ -268,29 +265,26 @@ int main (int argc, char const *argv[])
 
 	//calc clock rate. 
 	printf("timer1 clock rate %f Mhz\n", (float)timer1_s / ((float)dt_micros)); 
-	motor_setPWM(0.07); 
-	motor_forward(); 
-	int st = eqep.getPosition(); 
-	sleep(1); 
-	int dd = eqep.getPosition() - st; 
-	if(dd <= 0){
-	 printf("Motor polarity looks reversed, %d.  Check your wiring.\n", dd); 
-	 cleanup(); 
-	 return 0; 
-	}else{
-		printf("Motor forward direction looks OK: %d\n", dd); 
+	
+	//calibrate friction point. 
+	int st = eqep.getPosition();
+	float friction = 0.03; 
+	motor_setDrive(friction); 
+	while(eqep.getPosition() - st < 25 && friction <= 0.1){
+		friction += 0.05; 
+		motor_setDrive(friction); 
+		usleep(500000); 
 	}
-	motor_reverse(); 
-	st = eqep.getPosition(); 
-	sleep(1); 
-	dd = eqep.getPosition() - st; 
-	if(dd >= 0){
-	 printf("Motor polarity looks reversed, %d.  Check your wiring.\n", dd); 
-	 cleanup(); 
-	 return 0; 
-	}else{
-		printf("Motor reverse direction looks OK: %d\n", dd); 
+	if(eqep.getPosition() - st <= 0){
+		printf("Motor polarity looks reversed.  Check your wiring.\n"); 
+		cleanup(); 
+		return 0; 
 	}
+	printf("measured friction point %f\n", friction); 
+	friction += 0.08; // a bit of margin.
+	motor_setDrive(-1.0*friction); 
+	sleep(1); //drive to top. 
+	
 	int cyltop = eqep.getPosition();  //top of cylinder
 	motor_forward(); 
 	sleep(1); 
@@ -374,7 +368,7 @@ int main (int argc, char const *argv[])
 					dr = -0.016; //retract slowly
 				}
 			}else{
-				dr = -0.017; //hold (up)
+				dr = -1.0*friction; //hold (up)
 			}
 			motor_setDrive(dr); 
 			save_dat(); 
@@ -382,13 +376,13 @@ int main (int argc, char const *argv[])
 		}
 		int stoppos = eqep.getPosition(); 
 		//reset motor positon (should be no skipped counts; motion is slow)
-		motor_setDrive(-0.07); 
+		motor_setDrive(-1.0*friction); 
 		sleep(1); 
 		int newtop = eqep.getPosition(); //all the way retracted.
 		printf("# stopped at %d, top measured at %d, delta %d\n", stoppos, newtop, stoppos - newtop);  
 		printf("top  %d was %d ; ", newtop, cyltop); 
 		cyltop = newtop; 
-		motor_setDrive(0.07); 
+		motor_setDrive(friction); 
 		sleep(1); 
 		printf("bottom  %d was %d\n", eqep.getPosition(), cylbot); 
 		cylbot = eqep.getPosition();
