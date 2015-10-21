@@ -270,12 +270,14 @@ int main (int argc, char const *argv[])
 	//slug starts at bottom.
 	int st = eqep.getPosition();
 	float friction = 0.0; 
-	while(eqep.getPosition() - st > -25 && friction <= 0.1){
+	int dd = 0; 
+	while(dd > -25 && friction <= 0.1){
 		friction += 0.005; 
 		motor_setDrive(-1.0*friction); 
 		usleep(500000); 
+		dd = eqep.getPosition() - st; 
 	}
-	if(eqep.getPosition() - st >= 0){
+	if(dd >= 0){
 		printf("Motor polarity looks reversed.  Check your wiring.\n"); 
 		cleanup(); 
 		return 0; 
