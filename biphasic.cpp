@@ -230,7 +230,7 @@ int main (int argc, char const *argv[])
 
 	//calc clock rate. 
 	printf("timer1 clock rate %f Mhz\n", (float)timer1_s / ((float)dt_micros)); 
-	motor_setPWM(0.018); 
+	motor_setPWM(0.017); 
 	motor_forward(); 
 	int sta = eqep.getPosition(); 
 	sleep(1); 
@@ -277,7 +277,7 @@ int main (int argc, char const *argv[])
 	float c = 1e9; 
 	int n = 0; 
 	float* sav = (float*)malloc(sizeof(float) * 5 * 1e6); 
-		//20MB .. should be more than enough. 
+		//20MB .. 1e6 samples: should be more than enough. 
 	int savn = 0; 
 	auto update_velocity = [&] (int nn, float lerp) -> void {
 		float t1 = get_time(); 
@@ -299,7 +299,7 @@ int main (int argc, char const *argv[])
 			}
 		}
 	};
-	auto save_dat = [&] (int nn) -> void {
+	auto save_dat = [&] () -> void {
 		sav[savn*5+0] = t; 
 		sav[savn*5+1] = (float)x; 
 		sav[savn*5+2] = v; 
@@ -310,21 +310,19 @@ int main (int argc, char const *argv[])
 	
 	for(int j=0; j<1; j++){
 		timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR.
-		//this may take a little bit ...
-		n=0; 
+		//the reload may take a little bit ...
 		// compress the spring. 
 		t = get_time(); 
 		printf("start time %f\n", t); //dummy wait / syscall.
 		t = get_time(); 
+		n = 0; 
 		update_velocity(0, 0.0);
 		while(t < 0.1){
 			update_velocity(n, 0.1);
-			
 			if(t < 0.008){
 				dr = 1.0; //compress the spring down
 			}else if(t < 0.016 || x > -1000){
-				if(x > -300)
-				dr = -1.0; //drive up
+				if(x > -300) dr = -1.0; //drive up
 				else dr = -0.03; //coast up
 			}else if(t < 0.030){
 				if(v < -300*200)
@@ -335,7 +333,7 @@ int main (int argc, char const *argv[])
 				dr = -0.004; //hold (up)
 			}
 			motor_setDrive(dr); 
-			save_dat(n); 
+			save_dat(); 
 			n++; 
 		}
 		//reset motor positon. 
