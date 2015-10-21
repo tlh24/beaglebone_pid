@@ -269,25 +269,24 @@ int main (int argc, char const *argv[])
 	//calibrate friction point. 
 	int st = eqep.getPosition();
 	float friction = 0.003; 
-	motor_setDrive(friction); 
-	while(eqep.getPosition() - st < 25 && friction <= 0.1){
+	motor_setDrive(-1.0*friction); 
+	while(eqep.getPosition() - st > -25 && friction <= 0.1){
 		friction += 0.005; 
-		motor_setDrive(friction); 
+		motor_setDrive(-1.0*friction); 
 		usleep(500000); 
 	}
-	if(eqep.getPosition() - st <= 0){
+	if(eqep.getPosition() - st >= 0){
 		printf("Motor polarity looks reversed.  Check your wiring.\n"); 
 		cleanup(); 
 		return 0; 
 	}
-	printf("measured friction point %f\n", friction); 
-	friction += 0.08; // a bit of margin.
+	printf("measured friction point %f (%d)\n", friction, eqep.getPosition() - st); 
+	friction += 0.008; // a bit of margin.
 	motor_setDrive(-1.0*friction); 
-	sleep(1); //drive to top. 
-	
-	int cyltop = eqep.getPosition();  //top of cylinder
-	motor_forward(); 
 	sleep(1); 
+	int cyltop = eqep.getPosition();  //top of cylinder
+	motor_setDrive(friction); 
+	sleep(1); //drive to bottom. 
 	int cylbot = eqep.getPosition(); //bottom of cylinder, retract. 
 	printf("top of cylinder: %d bottom: %d delta: %d\n", cyltop, cylbot, cyltop-cylbot); 
 	
