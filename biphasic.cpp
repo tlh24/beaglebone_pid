@@ -79,6 +79,8 @@ void motor_setDrive(float dr){
 	if(dr < 0.0) motor_reverse(); 
 	if(dr > 0.0) motor_forward();
 	if(dr == 0.0) motor_stop(); 
+	dr = dr > 1.0 ? 1.0 : dr; 
+	dr = dr < -1.0 ? -1.0 : dr; //should work without this, too. 
 	pwm_addr[9] = (int)(fabs(dr) * 2000.0); 
 	//25kHz PWM cycle. 
 }
@@ -283,7 +285,7 @@ int main (int argc, char const *argv[])
 		return 0; 
 	}
 	printf("measured friction point %f (%d)\n", friction, dd); 
-	friction += 0.01; // a bit of margin.
+	friction += 0.008; // a bit of margin.
 	motor_setDrive(-1.0*friction); 
 	sleep(1); 
 	int cyltop = eqep.getPosition();  //top of cylinder
@@ -361,7 +363,7 @@ int main (int argc, char const *argv[])
 			update_velocity(n, 0.07);
 			if(t < 0.0075){
 				dr = 1.0; //compress the spring down; stop just before it maxes out
-			}else if(t < 0.015 && x > 550){
+			}else if(t < 0.015 && x > 450){
 				if(x > cylbot - cyltop) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
 				else dr = -0.1; //coast up
 			}else if(t < 0.03){
@@ -373,7 +375,7 @@ int main (int argc, char const *argv[])
 					dr = -0.016; //retract slowly
 				}
 			}else{
-				dr = -1.0*friction; //hold (up)
+				dr = -0.9*friction; //hold (up)
 			}
 			motor_setDrive(dr); 
 			save_dat(); 
