@@ -308,6 +308,7 @@ int main (int argc, char const *argv[])
 	float dr_int2 = 0.0; 
 	float c = 1e9; 
 	int n = 0; 
+	int stoppos = 0; 
 	float* sav = (float*)malloc(sizeof(float) * 5 * 1e6); 
 		//20MB .. 1e6 samples: should be more than enough. 
 	int savn = 0; 
@@ -354,18 +355,21 @@ int main (int argc, char const *argv[])
 			update_velocity(0, 0.0);
 		}
 		n = 0; 
+		stoppos = -100000; 
 		update_velocity(0, 0.0); //updates the time.
 		while(t < 0.08){
 			update_velocity(n, 0.07);
 			if(t < 0.0075){
 				dr = 1.0; //compress the spring down; stop just before it maxes out
-			}else if(t < 0.015 && x > 600){
+			}else if(t < 0.015 && x > 550){
 				if(x > cylbot - cyltop) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
 				else dr = -0.1; //coast up
-			}else if(t < 0.028){
+			}else if(t < 0.03){
 				if(v < -75*200){
-					dr = -0.7 * v / (600.0*200.0); 
+					dr = -0.8 * v / (600.0*200.0); 
 				}else{
+					if(stoppos <= -100000)
+						stoppos = eqep.getPosition(); 
 					dr = -0.016; //retract slowly
 				}
 			}else{
@@ -375,7 +379,6 @@ int main (int argc, char const *argv[])
 			save_dat(); 
 			n++; 
 		}
-		int stoppos = eqep.getPosition(); 
 		//reset motor positon (should be no skipped counts; motion is slow)
 		motor_setDrive(-1.0*friction); 
 		sleep(1); 
