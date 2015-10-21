@@ -381,12 +381,14 @@ int main (int argc, char const *argv[])
 			n++; 
 		}
 		//reset motor positon. 
-		motor_setDrive(-0.025); 
+		motor_setDrive(-0.05); 
 		sleep(1); 
 		printf("top of cylinder %d was %d\n", eqep.getPosition(), cyltop); 
+		cyltop = eqep.getPosition(); 
 		motor_setDrive(0.05); 
 		sleep(1); 
 		printf("bottom of cylinder %d was %d\n", eqep.getPosition(), cylbot); 
+		cylbot = eqep.getPosition();
 	}
 	//unlock all memory. 
 	munlockall();
