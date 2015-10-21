@@ -278,7 +278,7 @@ int main (int argc, char const *argv[])
 		dd = eqep.getPosition() - st; 
 	}
 	if(dd >= 0){
-		printf("Motor polarity looks reversed.  Check your wiring.\n"); 
+		printf("Motor polarity looks reversed, %d.  Check your wiring.\n", d); 
 		cleanup(); 
 		return 0; 
 	}
