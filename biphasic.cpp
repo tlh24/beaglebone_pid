@@ -382,13 +382,13 @@ int main (int argc, char const *argv[])
 		}
 		int stoppos = eqep.getPosition(); 
 		//reset motor positon (should be no skipped counts; motion is slow)
-		motor_setDrive(-0.03); 
+		motor_setDrive(-0.04); 
 		sleep(1); 
 		int newtop = eqep.getPosition(); //all the way retracted.
 		printf("# stopped at %d, top measured at %d, delta %d\n", stoppos, newtop, stoppos - newtop);  
-		printf("top  %d was %d\ ; ", newtop, cyltop); 
+		printf("top  %d was %d ; ", newtop, cyltop); 
 		cyltop = newtop; 
-		motor_setDrive(0.03); 
+		motor_setDrive(0.04); 
 		sleep(1); 
 		printf("bottom  %d was %d\n", eqep.getPosition(), cylbot); 
 		cylbot = eqep.getPosition();
