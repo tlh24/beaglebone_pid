@@ -370,7 +370,7 @@ int main (int argc, char const *argv[])
 				else dr = -0.1; //coast up
 			}else if(t < 0.030){
 				if(v < -100*200){
-					dr = -0.5 * v / (600.0*200.0); 
+					dr = -0.25 * v / (600.0*200.0); 
 				}else{
 					dr = 0.0; 
 				}
