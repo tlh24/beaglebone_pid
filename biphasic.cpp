@@ -350,7 +350,7 @@ int main (int argc, char const *argv[])
 		cleanup(); 
 		return 0; 
 	}
-	for(int j=0; j<10; j++){
+	for(int j=0; j<15; j++){
 		timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR.
 		//the reload may take a little bit ...
 		int pt = get_time(); 
@@ -365,7 +365,7 @@ int main (int argc, char const *argv[])
 			update_velocity(n, 0.07);
 			if(t < 0.0075){
 				dr = 1.0; //compress the spring down; stop just before it maxes out
-			}else if(t < 0.015 && x > 400){
+			}else if(t < 0.015 && x > 420){
 				if(x > cylbot - cyltop) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
 				else dr = -0.1; //coast up
 			}else if(t < 0.03){
@@ -374,7 +374,7 @@ int main (int argc, char const *argv[])
 				}else{
 					if(stoppos <= -100000)
 						stoppos = eqep.getPosition(); 
-					dr = -0.016; //retract slowly
+					dr = -0.85*friction; //retract(slowly)
 				}
 			}else{
 				dr = -0.9*friction; //hold (up)
@@ -397,6 +397,7 @@ int main (int argc, char const *argv[])
 	}
 	//unlock all memory. 
 	munlockall();
+	printf("writing out data record..\n"); 
 	FILE* dat_fd = fopen("pid.dat", "w"); 
 	for(int j=0; j<savn; j++){
 		for(int k=0; k<5; k++){
@@ -406,7 +407,7 @@ int main (int argc, char const *argv[])
 	}
 	fclose(dat_fd); 
 	free(sav); 
-
+	printf("\t.. done\n"); 
 	cleanup(); 
 	return 0;
 }
