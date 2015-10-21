@@ -283,7 +283,7 @@ int main (int argc, char const *argv[])
 		return 0; 
 	}
 	printf("measured friction point %f (%d)\n", friction, dd); 
-	friction += 0.008; // a bit of margin.
+	friction += 0.01; // a bit of margin.
 	motor_setDrive(-1.0*friction); 
 	sleep(1); 
 	int cyltop = eqep.getPosition();  //top of cylinder
@@ -345,7 +345,7 @@ int main (int argc, char const *argv[])
 		cleanup(); 
 		return 0; 
 	}
-	for(int j=0; j<1; j++){
+	for(int j=0; j<10; j++){
 		timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR.
 		//the reload may take a little bit ...
 		int pt = get_time(); 
