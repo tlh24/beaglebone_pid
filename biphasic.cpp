@@ -335,7 +335,7 @@ int main (int argc, char const *argv[])
 		}
 	};
 	auto save_dat = [&] () -> void {
-		if(savn < 2e6){
+		if(savn < 2e6 && sav){
 			sav[savn*5+0] = t; 
 			sav[savn*5+1] = (float)x; 
 			sav[savn*5+2] = v; 
@@ -397,7 +397,8 @@ int main (int argc, char const *argv[])
 	}
 	//unlock all memory. 
 	munlockall();
-	printf("writing out data record..\n"); 
+	motor_setDrive(0.0); 
+	printf("writing out data record (%d)..\n", savn); 
 	FILE* dat_fd = fopen("pid.dat", "w"); 
 	for(int j=0; j<savn; j++){
 		for(int k=0; k<5; k++){
