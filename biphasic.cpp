@@ -364,8 +364,8 @@ int main (int argc, char const *argv[])
 			update_velocity(n, 0.1);
 			if(t < 0.0075){
 				dr = 1.0; //compress the spring down; stop just before it maxes out
-			}else if(t < 0.016 || x > 500){
-				if(x > cylbot) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
+			}else if(t < 0.015 || x > 500){
+				if(x > cylbot - cyltop) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
 				else dr = -0.1; //coast up
 			}else if(t < 0.030){
 				if(v < -150*200){
