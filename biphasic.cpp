@@ -311,8 +311,8 @@ int main (int argc, char const *argv[])
 	float c = 1e9; 
 	int n = 0; 
 	int stoppos = 0; 
-	float* sav = (float*)malloc(sizeof(float) * 5 * 1e6); 
-		//20MB .. 1e6 samples: should be more than enough. 
+	float* sav = (float*)malloc(sizeof(float) * 5 * 2e6); 
+		//40MB .. 2e6 samples: should be more than enough. 
 	int savn = 0; 
 	auto update_velocity = [&] (int nn, float lerp) -> void {
 		float t1 = get_time(); 
@@ -335,12 +335,14 @@ int main (int argc, char const *argv[])
 		}
 	};
 	auto save_dat = [&] () -> void {
-		sav[savn*5+0] = t; 
-		sav[savn*5+1] = (float)x; 
-		sav[savn*5+2] = v; 
-		sav[savn*5+3] = v_; 
-		sav[savn*5+4] = dr; 
-		savn++; 
+		if(savn < 2e6){
+			sav[savn*5+0] = t; 
+			sav[savn*5+1] = (float)x; 
+			sav[savn*5+2] = v; 
+			sav[savn*5+3] = v_; 
+			sav[savn*5+4] = dr; 
+			savn++; 
+		}
 	};
 	/* lock all memory (prevent swapping) */
 	if (mlockall(MCL_CURRENT|MCL_FUTURE) == -1) {
