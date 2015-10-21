@@ -268,7 +268,7 @@ int main (int argc, char const *argv[])
 
 	//calc clock rate. 
 	printf("timer1 clock rate %f Mhz\n", (float)timer1_s / ((float)dt_micros)); 
-	motor_setPWM(0.05); 
+	motor_setPWM(0.07); 
 	motor_forward(); 
 	int st = eqep.getPosition(); 
 	sleep(1); 
@@ -382,13 +382,13 @@ int main (int argc, char const *argv[])
 		}
 		int stoppos = eqep.getPosition(); 
 		//reset motor positon (should be no skipped counts; motion is slow)
-		motor_setDrive(-0.04); 
+		motor_setDrive(-0.07); 
 		sleep(1); 
 		int newtop = eqep.getPosition(); //all the way retracted.
 		printf("# stopped at %d, top measured at %d, delta %d\n", stoppos, newtop, stoppos - newtop);  
 		printf("top  %d was %d ; ", newtop, cyltop); 
 		cyltop = newtop; 
-		motor_setDrive(0.04); 
+		motor_setDrive(0.07); 
 		sleep(1); 
 		printf("bottom  %d was %d\n", eqep.getPosition(), cylbot); 
 		cylbot = eqep.getPosition();
