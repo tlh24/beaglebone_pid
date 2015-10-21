@@ -23,8 +23,12 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/sysinfo.h>
+#include <sys/types.h>
 #include <errno.h>
 #include <math.h>
+#include <string.h>
 
 #include "bbb-eqep.h"
 
@@ -41,6 +45,9 @@ uint32_t* pwmss_addr = 0;
 uint32_t* prcm_addr = 0; 
 
 uint32_t saved[0x1000/4]; 
+
+static int latency_target_fd = -1;
+static int32_t latency_target_value = 0;
 
 //mmap is used as a general-purpose mechanism for accessing system registers from userspace.
 uint32_t* map_register(uint32_t base_addr, uint32_t len){
@@ -109,6 +116,34 @@ float get_time(){
 	return (float)i / 24e6; //output in seconds.
 }
 
+static void set_latency_target(void){
+	struct stat s;
+	int err;
+	
+	errno = 0;
+	err = stat("/dev/cpu_dma_latency", &s);
+	if (err == -1) {
+		printf("WARN: stat /dev/cpu_dma_latency failed, %s\n", strerror(errno));
+		return;
+	}
+
+	errno = 0;
+	latency_target_fd = open("/dev/cpu_dma_latency", O_RDWR);
+	if (latency_target_fd == -1) {
+		printf("WARN: open /dev/cpu_dma_latency, %s\n", strerror(errno));
+		return;
+	}
+
+	errno = 0;
+	err = write(latency_target_fd, &latency_target_value, 4);
+	if (err < 1) {
+		printf("# error setting cpu_dma_latency to %d! %s\n", latency_target_value, strerror(errno));
+		close(latency_target_fd);
+		return;
+	}
+	printf("# /dev/cpu_dma_latency set to %dus\n", latency_target_value);
+}
+
 void cleanup(){
 	motor_stop(); 
 	motor_setPWM(0.0); 
@@ -117,6 +152,9 @@ void cleanup(){
 	munmap(pwmss_addr, 0x1000); 
 	munmap(prcm_addr, 0x1000); 
 	close (mem_fd); 
+	/* close the latency_target_fd if it's open */
+	if (latency_target_fd >= 0)
+		close(latency_target_fd);
 }
 
 int main (int argc, char const *argv[])
@@ -308,7 +346,12 @@ int main (int argc, char const *argv[])
 		sav[savn*5+4] = dr; 
 		savn++; 
 	};
-	
+	/* lock all memory (prevent swapping) */
+	if (mlockall(MCL_CURRENT|MCL_FUTURE) == -1) {
+		perror("mlockall");
+		cleanup(); 
+		return 0; 
+	}
 	for(int j=0; j<1; j++){
 		timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR.
 		//the reload may take a little bit ...
@@ -351,6 +394,8 @@ int main (int argc, char const *argv[])
 		fin = eqep.getPosition(); //bottom of cylinder, retract. 
 		printf("fin %d\n", fin); 
 	}
+	//unlock all memory. 
+	munlockall();
 	FILE* dat_fd = fopen("pid.dat", "w"); 
 	for(int j=0; j<savn; j++){
 		for(int k=0; k<5; k++){
