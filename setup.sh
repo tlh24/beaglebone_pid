@@ -16,9 +16,10 @@ config-pin P9.18 out
 
 sleep 1
 #export to userspace. (this should not fail with a write error)
+#units for all of these is ns (though the incoming clock is 100Mhz, 10ns increments)
 echo 0 > /sys/class/pwm/pwmchip0/export 
 # echo 0 > /sys/class/pwm/export # kernel 3.8
-echo 50000 > /sys/class/pwm/pwmchip0/pwm0/period
+echo 33333 > /sys/class/pwm/pwmchip0/pwm0/period
 echo 500 > /sys/class/pwm/pwmchip0/pwm0/duty_cycle
 echo 1 > /sys/class/pwm/pwmchip0/pwm0/enable
 echo on > /sys/class/pwm/pwmchip0/pwm0/power/control
@@ -29,7 +30,7 @@ PWM=/sys/devices/platform/ocp/48300000.epwmss/48300200.ehrpwm/pwm/pwmchip?
 # i do not know why it's pwmchip2 ... 
 sleep 1
 echo 0 > $PWM/export
-echo 50000 > $PWM/pwm0/period
+echo 33333 > $PWM/pwm0/period
 echo 500 > $PWM/pwm0/duty_cycle
 echo 1 > $PWM/pwm0/enable
 
