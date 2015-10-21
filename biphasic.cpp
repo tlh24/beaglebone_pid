@@ -76,8 +76,8 @@ void motor_stop(){
 	gpio_addr[0x190 / 4] = 0x1 << 5; //clear data out
 }
 void motor_setPWM(float duty){
-	pwm_addr[9] = (int)(duty * 20e3); 
-	//see setup.sh -- 20kHz PWM cycle. 
+	pwm_addr[9] = (int)(duty * 3333.0); 
+	//30kHz PWM cycle. 
 }
 void motor_setDrive(float dr){
 	if(dr < 0.0) motor_reverse(); 
@@ -230,12 +230,12 @@ int main (int argc, char const *argv[])
 	//enable the PWM module associated with this eQEP. 
 	pwm_addr = (uint16_t*)(pwmss_addr + (0x200/4)); //got the offset from the device tree.
 	//note indexing as shorts. 
-	pwm_addr[5] = 5000; // PRD. 20kHz from the 100Mhz clock.
+	pwm_addr[5] = 3333; // PRD. 30kHz from the 100Mhz clock.
 	pwm_addr[7] = 0x0; // CMPCTL.  enable shadowm load when counter=0. 
-	pwm_addr[9] = 2500; //CMPA. 50% duty cycle.
+	pwm_addr[9] = 166; //CMPA. 5% duty cycle.
 	pwm_addr[11] = 0x12;  // set when the counter = 0; clear when counter = CMPA
  	pwm_addr[12] = 0; //disable output B. 
- 	pwm_addr[0] = 0xc8; // up count mode, software sync.
+ 	pwm_addr[0] = 0xc0; // up count mode, software sync, shadow on.
 	printf("PWM TBCTL 0x%X (0xC0)\n", pwm_addr[0]); 
 	printf("PWM TBSTS 0x%X (0x1)\n", pwm_addr[1]); 
 	printf("PWM TBCNT 0x%X (not zero)\n", pwm_addr[4]); 
@@ -269,7 +269,7 @@ int main (int argc, char const *argv[])
 
 	//calc clock rate. 
 	printf("timer1 clock rate %f Mhz\n", (float)timer1_s / ((float)dt_micros)); 
-	motor_setPWM(0.017); 
+	motor_setPWM(0.065); 
 	motor_forward(); 
 	int sta = eqep.getPosition(); 
 	sleep(1); 
@@ -364,32 +364,28 @@ int main (int argc, char const *argv[])
 		update_velocity(0, 0.0); //updates the time.
 		while(t < 0.1){
 			update_velocity(n, 0.1);
-			if(t < 0.008){
-				dr = 1.0; //compress the spring down
+			if(t < 0.0075){
+				dr = 1.0; //compress the spring down; stop just before it maxes out
 			}else if(t < 0.016 || x > -800){
 				if(x > 0) dr = -1.0; //drive up.  near peak velocity @ crossing.
-				else dr = -0.03; //coast up
+				else dr = -0.1; //coast up
 			}else if(t < 0.030){
-				if(v < -600*200){
-					dr = 0.05; //decelerate down
-				}else if(v < -300*200){
-					dr = 0.025; // decelerate less
-				}else if(v < -150*200){
-					dr = 0.013; // decelerate less
-				} else{
+				if(v < -100*200){
+					dr = -0.18 * v / (600.0*200.0); 
+				}else{
 					dr = 0.0; 
 				}
 			}else{
-				dr = -0.004; //hold (up)
+				dr = -0.016; //hold (up)
 			}
 			motor_setDrive(dr); 
 			save_dat(); 
 			n++; 
 		}
 		//reset motor positon. 
-		motor_setDrive(-0.006); 
+		motor_setDrive(-0.025); 
 		sleep(1); 
-		motor_setDrive(0.015); 
+		motor_setDrive(0.05); 
 		sleep(1); 
 		fin = eqep.getPosition(); //bottom of cylinder, retract. 
 		printf("fin %d\n", fin); 
