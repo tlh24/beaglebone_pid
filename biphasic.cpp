@@ -367,14 +367,14 @@ int main (int argc, char const *argv[])
 			}else if(t < 0.015 && x > 600){
 				if(x > cylbot - cyltop) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
 				else dr = -0.1; //coast up
-			}else if(t < 0.030){
-				if(v < -100*200){
+			}else if(t < 0.028){
+				if(v < -50*200){
 					dr = -0.7 * v / (600.0*200.0); 
 				}else{
-					dr = -0.01; 
+					dr = -0.014; //retract slowly
 				}
 			}else{
-				dr = -0.016; //hold (up)
+				dr = -0.017; //hold (up)
 			}
 			motor_setDrive(dr); 
 			save_dat(); 
@@ -382,13 +382,13 @@ int main (int argc, char const *argv[])
 		}
 		int stoppos = eqep.getPosition(); 
 		//reset motor positon (should be no skipped counts; motion is slow)
-		motor_setDrive(-0.04); 
+		motor_setDrive(-0.03); 
 		sleep(1); 
 		int newtop = eqep.getPosition(); //all the way retracted.
-		printf("# stopped at %d, top at %d, delta %d\n", stoppos, newtop, stoppos - newtop);  
+		printf("# stopped at %d, top measured at %d, delta %d\n", stoppos, newtop, stoppos - newtop);  
 		printf("top  %d was %d\ ; ", newtop, cyltop); 
 		cyltop = newtop; 
-		motor_setDrive(0.04); 
+		motor_setDrive(0.03); 
 		sleep(1); 
 		printf("bottom  %d was %d\n", eqep.getPosition(), cylbot); 
 		cylbot = eqep.getPosition();
