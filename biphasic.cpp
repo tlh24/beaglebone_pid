@@ -369,8 +369,8 @@ int main (int argc, char const *argv[])
 				if(x > 0) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
 				else dr = -0.1; //coast up
 			}else if(t < 0.030){
-				if(v < -100*200){
-					dr = -0.25 * v / (600.0*200.0); 
+				if(v < -150*200){
+					dr = -0.4 * v / (600.0*200.0); 
 				}else{
 					dr = 0.0; 
 				}
