@@ -268,11 +268,11 @@ int main (int argc, char const *argv[])
 
 	//calc clock rate. 
 	printf("timer1 clock rate %f Mhz\n", (float)timer1_s / ((float)dt_micros)); 
-	motor_setPWM(0.065); 
+	motor_setPWM(0.05); 
 	motor_forward(); 
-	int sta = eqep.getPosition(); 
+	int st = eqep.getPosition(); 
 	sleep(1); 
-	int dd = eqep.getPosition() - sta; 
+	int dd = eqep.getPosition() - st; 
 	if(dd <= 0){
 	 printf("Motor polarity looks reversed, %d.  Check your wiring.\n", dd); 
 	 cleanup(); 
@@ -280,11 +280,10 @@ int main (int argc, char const *argv[])
 	}else{
 		printf("Motor forward direction looks OK: %d\n", dd); 
 	}
-	int fin = eqep.getPosition(); 
 	motor_reverse(); 
-	sta = eqep.getPosition(); 
+	st = eqep.getPosition(); 
 	sleep(1); 
-	dd = eqep.getPosition() - sta; 
+	dd = eqep.getPosition() - st; 
 	if(dd >= 0){
 	 printf("Motor polarity looks reversed, %d.  Check your wiring.\n", dd); 
 	 cleanup(); 
@@ -292,11 +291,11 @@ int main (int argc, char const *argv[])
 	}else{
 		printf("Motor reverse direction looks OK: %d\n", dd); 
 	}
-	sta = eqep.getPosition();  //top of cylinder
+	int cyltop = eqep.getPosition();  //top of cylinder
 	motor_forward(); 
 	sleep(1); 
-	fin = eqep.getPosition(); //bottom of cylinder, retract. 
-	printf("top of cylinder: %d bottom: %d delta: %d\n", sta, fin, sta-fin); 
+	int cylbot = eqep.getPosition(); //bottom of cylinder, retract. 
+	printf("top of cylinder: %d bottom: %d delta: %d\n", cyltop, cylbot, cyltop-cylbot); 
 	
 	//try a negative step ('up')
 	//full-speed acceleration to midpoint of trajectory. 
@@ -319,7 +318,7 @@ int main (int argc, char const *argv[])
 	int savn = 0; 
 	auto update_velocity = [&] (int nn, float lerp) -> void {
 		float t1 = get_time(); 
-		x = eqep.getPosition() - fin;
+		x = eqep.getPosition() - cyltop;
 		float t2 = get_time();
 		t = (t1 + t2) / 2.0;
 		if(nn == 0){
@@ -365,8 +364,8 @@ int main (int argc, char const *argv[])
 			update_velocity(n, 0.1);
 			if(t < 0.0075){
 				dr = 1.0; //compress the spring down; stop just before it maxes out
-			}else if(t < 0.016 || x > -200){
-				if(x > 0) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
+			}else if(t < 0.016 || x > 500){
+				if(x > cylbot) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
 				else dr = -0.1; //coast up
 			}else if(t < 0.030){
 				if(v < -150*200){
@@ -384,10 +383,10 @@ int main (int argc, char const *argv[])
 		//reset motor positon. 
 		motor_setDrive(-0.025); 
 		sleep(1); 
+		printf("top of cylinder %d was %d\n", eqep.getPosition(), cyltop); 
 		motor_setDrive(0.05); 
 		sleep(1); 
-		fin = eqep.getPosition(); //bottom of cylinder, retract. 
-		printf("fin %d\n", fin); 
+		printf("bottom of cylinder %d was %d\n", eqep.getPosition(), cylbot); 
 	}
 	//unlock all memory. 
 	munlockall();
