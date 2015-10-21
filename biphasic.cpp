@@ -271,18 +271,18 @@ int main (int argc, char const *argv[])
 	int st = eqep.getPosition();
 	float friction = 0.0; 
 	int dd = 0; 
-	while(dd > -25 && friction <= 0.1){
+	while(dd > -250 && friction <= 0.1){
 		friction += 0.005; 
 		motor_setDrive(-1.0*friction); 
 		usleep(500000); 
 		dd = eqep.getPosition() - st; 
 	}
 	if(dd >= 0){
-		printf("Motor polarity looks reversed, %d.  Check your wiring.\n", d); 
+		printf("Motor polarity looks reversed, %d.  Check your wiring.\n", dd); 
 		cleanup(); 
 		return 0; 
 	}
-	printf("measured friction point %f (%d)\n", friction, eqep.getPosition() - st); 
+	printf("measured friction point %f (%d)\n", friction, dd); 
 	friction += 0.008; // a bit of margin.
 	motor_setDrive(-1.0*friction); 
 	sleep(1); 
