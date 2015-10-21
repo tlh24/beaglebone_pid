@@ -77,7 +77,7 @@ void motor_stop(){
 }
 void motor_setPWM(float duty){
 	pwm_addr[9] = (int)(duty * 2000.0); 
-	//30kHz PWM cycle. 
+	//25kHz PWM cycle. 
 }
 void motor_setDrive(float dr){
 	if(dr < 0.0) motor_reverse(); 
@@ -230,7 +230,7 @@ int main (int argc, char const *argv[])
 	//enable the PWM module associated with this eQEP. 
 	pwm_addr = (uint16_t*)(pwmss_addr + (0x200/4)); //got the offset from the device tree.
 	//note indexing as shorts. 
-	pwm_addr[5] = 2000; // PRD. 20kHz from the 100Mhz clock.
+	pwm_addr[5] = 2000; // PRD. 25kHz from the 100Mhz clock.
 	pwm_addr[7] = 0x0; // CMPCTL.  enable shadowm load when counter=0. 
 	pwm_addr[9] = 166; //CMPA. 5% duty cycle.
 	pwm_addr[11] = 0x12;  // set when the counter = 0; clear when counter = CMPA
@@ -244,7 +244,6 @@ int main (int argc, char const *argv[])
 	printf("PWM CMPA 0x%X (%d)\n", pwm_addr[9], pwm_addr[9]);
 	printf("PWM CMPB 0x%X (%d)\n", pwm_addr[10], pwm_addr[10]);  
 	printf("PWM AQCTLA 0x%X (0x12)\n", pwm_addr[11]); 
-	//pwm_addr[9] = 200; //works!!  sets the duty cycle!
 
 	//time a read-loop to assess speed
 	timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR. 
@@ -371,7 +370,7 @@ int main (int argc, char const *argv[])
 				else dr = -0.1; //coast up
 			}else if(t < 0.030){
 				if(v < -100*200){
-					dr = -0.08 * v / (600.0*200.0); 
+					dr = -0.05 * v / (600.0*200.0); 
 				}else{
 					dr = 0.0; 
 				}
