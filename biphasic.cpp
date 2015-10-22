@@ -474,7 +474,7 @@ int main (int argc, char const *argv[])
 							unlock(); 
 							printf("writing out data record (%d)..", savn); 
 							FILE* dat_fd = fopen("/mnt/ramdisk/pid.dat", "a"); 
-							for(int j=0; j<savn; totalWrite<9e5; j++){
+							for(int j=0; j<savn && totalWrite<9e5; j++){
 								for(int k=0; k<5; k++){
 									fprintf(dat_fd, "%e\t", sav[j*5+k]); 
 								}
