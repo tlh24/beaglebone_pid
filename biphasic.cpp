@@ -468,7 +468,7 @@ int main (int argc, char const *argv[])
 										dr = -0.5*friction; //retract(slowly)
 									}
 								}else{
-									dr = -0.7*friction; //hold (up)
+									dr = -0.8*friction; //hold (up)
 								}
 								motor_setDrive(dr); 
 								save_dat(); 
@@ -476,6 +476,7 @@ int main (int argc, char const *argv[])
 							}
 							unlock(); 
 							printf("deceleration margin %d\n", stoppos-eqep.getPosition());  
+							cyltop = eqep.getPosition(); 
 							printf("writing out data record (%d)..", savn); 
 							FILE* dat_fd = fopen("/mnt/ramdisk/pid.dat", "a"); 
 							for(int j=0; j<savn && totalWrite<9e5; j++){
