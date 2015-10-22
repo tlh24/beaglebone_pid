@@ -329,7 +329,7 @@ int main (int argc, char const *argv[])
 				float dt_ = t - t_vold;
 				v_ = (float)(x - x_old) / dt_; 
 				float lerp_ = (dt_ + 0.00002) / 0.0002; 
-				lerp_ = lerp_ > 1.0 ? 1.0 : lerp_; 
+				lerp_ = lerp_ > 2.0 ? 2.0 : lerp_; 
 				lerp_ *= lerp; 
 				v = lerp_*v_ + (1.0 - lerp_)*v; //simple fading-memory filter 
 					//(with semi-constant timeconstant at increasing update)
@@ -366,7 +366,7 @@ int main (int argc, char const *argv[])
 		stoppos = -100000; 
 		update_velocity(0, 0.0); //updates the time.
 		while(t < 0.08){
-			update_velocity(n, 0.07);
+			update_velocity(n, 0.1);
 			if(t < 0.0075){
 				dr = 1.0; //compress the spring down; stop just before it maxes out
 			}else if(t < 0.0168 && x > 400){
