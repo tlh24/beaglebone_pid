@@ -328,8 +328,11 @@ int main (int argc, char const *argv[])
 				//update the velocity. 
 				float dt_ = t - t_vold;
 				v_ = (float)(x - x_old) / dt_; 
-				v = lerp*v_ + (1.0 - lerp)*v; //simple fading-memory filter 
-					//(with shorter timeconstant at high speed)
+				float lerp_ = (dt_ + 0.00002) / 0.0002; 
+				lerp_ = lerp_ > 1.0 ? 1.0 : lerp_; 
+				lerp_ *= lerp; 
+				v = lerp_*v_ + (1.0 - lerp_)*v; //simple fading-memory filter 
+					//(with semi-constant timeconstant at increasing update)
 				t_vold = t; 
 				x_old = x;
 			}
