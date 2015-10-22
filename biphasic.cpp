@@ -363,7 +363,7 @@ int main (int argc, char const *argv[])
 			update_velocity(0, 0.0);
 		}
 		n = 0; 
-		stoppos = -100000; 
+		int stoplatch = 0; 
 		update_velocity(0, 0.0); //updates the time.
 		while(t < 0.08){
 			update_velocity(n, 0.2);
@@ -372,13 +372,15 @@ int main (int argc, char const *argv[])
 			}else if(t < 0.0168 && x > 400){
 				if(x > cylbot - cyltop) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
 				else dr = -0.1; //coast up
-			}else if(t < 0.03){
-				if(v < -75*200){
+			}else if(t < 0.035){
+				if(v < -50*200 && !stoplatch){
 					dr = -0.9 * (v + 50*200) / (600.0*200.0); 
 				}else{
-					if(stoppos <= -100000)
+					if(!stoplatch){
 						stoppos = eqep.getPosition(); 
-					dr = -0.7*friction; //retract(slowly)
+						stoplatch = 1; 
+					}
+					dr = -0.6*friction; //retract(slowly)
 				}
 			}else{
 				dr = -0.8*friction; //hold (up)
