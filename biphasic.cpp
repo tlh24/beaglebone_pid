@@ -475,6 +475,7 @@ int main (int argc, char const *argv[])
 								n++; 
 							}
 							unlock(); 
+							printf("deceleration margin %d\n", stoppos-eqep.getPosition());  
 							printf("writing out data record (%d)..", savn); 
 							FILE* dat_fd = fopen("/mnt/ramdisk/pid.dat", "a"); 
 							for(int j=0; j<savn && totalWrite<9e5; j++){
