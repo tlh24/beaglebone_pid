@@ -429,6 +429,7 @@ int main (int argc, char const *argv[])
 						//check if the move makes sense. 
 						if(eqep.getPosition() - cyltop < 320){
 							snprintf(g_stat, CMD_SIZ, "invalid retraction -- insufficient deceleration space, %d \nmove done\n", eqep.getPosition() - cyltop); 
+							motor_setDrive(0.0); 
 						}else{
 							// we're going for it!!
 							cylbot = eqep.getPosition(); 
