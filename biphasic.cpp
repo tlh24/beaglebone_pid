@@ -432,7 +432,7 @@ int main (int argc, char const *argv[])
 							snprintf(g_stat, CMD_SIZ, "invalid retraction -- insufficient deceleration space, %d \nmove done\n", eqep.getPosition() - cyltop); 
 							//don't change the drive.
 						}else{
-							printf("deceleration space %d\n" eqep.getPosition() - cyltop);
+							printf("deceleration space %d\n", eqep.getPosition() - cyltop);
 							fflush(stdout); 
 							usleep(50000); 
 							// we're going for it!!
