@@ -369,7 +369,7 @@ int main (int argc, char const *argv[])
 			update_velocity(n, 0.2);
 			if(t < 0.0075){
 				dr = 1.0; //compress the spring down; stop just before it maxes out
-			}else if(t < 0.0168 && x > 400){
+			}else if(t < 0.0168 && x > 400 + (j/2)*100){
 				if(x > cylbot - cyltop) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
 				else dr = -0.1; //coast up
 			}else if(t < 0.035){
@@ -380,7 +380,7 @@ int main (int argc, char const *argv[])
 						stoppos = eqep.getPosition(); 
 						stoplatch = 1; 
 					}
-					dr = -0.6*friction; //retract(slowly)
+					dr = -0.4*friction; //retract(slowly)
 				}
 			}else{
 				dr = -0.8*friction; //hold (up)
