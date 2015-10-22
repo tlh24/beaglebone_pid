@@ -312,8 +312,8 @@ int main (int argc, char const *argv[])
 	float c = 1e9; 
 	int n = 0; 
 	int stoppos = 0; 
-	float* sav = (float*)malloc(sizeof(float) * 5 * 2e6); 
-		//40MB .. 2e6 samples: should be more than enough. 
+	float* sav = (float*)malloc(sizeof(float) * 5 * 1e6); 
+		//20MB .. 1e6 samples: should be more than enough. 
 	int savn = 0; 
 	auto update_velocity = [&] (int nn, float lerp) -> void {
 		float t1 = get_time(); 
@@ -339,7 +339,7 @@ int main (int argc, char const *argv[])
 		}
 	};
 	auto save_dat = [&] () -> void {
-		if(savn < 2e6 && sav){
+		if(savn < 1e6 && sav){
 			sav[savn*5+0] = t; 
 			sav[savn*5+1] = (float)x; 
 			sav[savn*5+2] = v; 
@@ -354,7 +354,7 @@ int main (int argc, char const *argv[])
 		cleanup(); 
 		return 0; 
 	}
-	for(int j=0; j<15; j++){
+	for(int j=0; j<3*10; j++){
 		timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR.
 		//the reload may take a little bit ...
 		int pt = get_time(); 
@@ -369,7 +369,7 @@ int main (int argc, char const *argv[])
 			update_velocity(n, 0.2);
 			if(t < 0.0075){
 				dr = 1.0; //compress the spring down; stop just before it maxes out
-			}else if(t < 0.0168 && x > 400 + (j/2)*100){
+			}else if(t < 0.0168 && x > 400 + (j/3)*100){
 				if(x > cylbot - cyltop) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
 				else dr = -0.1; //coast up
 			}else if(t < 0.035){
