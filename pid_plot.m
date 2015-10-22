@@ -1,3 +1,4 @@
+% unix('scp debian@beaglebone.local:/mnt/ramdisk/pid.dat .')
 load pid.dat
 t = pid(:,1); 
 x = pid(:,2); 
@@ -9,6 +10,9 @@ dr = pid(:,5);
 dt = diff(t); 
 dt = [dt; 0]; 
 ends = find(dt < -0.05); 
+if numel(ends) == 0 
+	ends = length(t); 
+end
 plot(0,0); 
 hold on;
 s = 1; 

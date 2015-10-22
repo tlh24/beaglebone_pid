@@ -32,6 +32,7 @@
 #include <errno.h>
 #include <math.h>
 #include <string.h>
+#include <signal.h>
 
 #include "bbb-eqep.h"
 #include "sock.h"
@@ -180,6 +181,10 @@ void unlock(){
 	if (latency_target_fd >= 0)
 		close(latency_target_fd);
 }
+void sig_handler(int s){
+	printf("Caught signal %d\n",s);
+	g_die = true; 
+}
 
 int main (int argc, char const *argv[])
 {
@@ -190,6 +195,13 @@ int main (int argc, char const *argv[])
 	g_controlSock = setup_socket(4596); 
 	g_statusSock = connect_socket(4597,"mongolianbbq.local"); 
 	get_sockaddr(4597,"mongolianbbq.local",&g_statusAddr);
+	
+	// sig hangler for control-C (sigint)
+	struct sigaction sigIntHandler;
+   sigIntHandler.sa_handler = sig_handler;
+   sigemptyset(&sigIntHandler.sa_mask);
+   sigIntHandler.sa_flags = 0;
+   sigaction(SIGINT, &sigIntHandler, NULL);
 	
 	mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
 	if (mem_fd < 0){
@@ -370,7 +382,7 @@ int main (int argc, char const *argv[])
 			savn++; 
 		}
 	};
-	
+	printf("waiting for commands.\n"); 
 	//read in commands
 	while(!g_die){
 		bzero(g_cmdt, sizeof(g_cmdt)); 
@@ -415,8 +427,8 @@ int main (int argc, char const *argv[])
 						//retract -- out!
 						//slug needs to be at bottom -- needle exposed / inserted.
 						//check if the move makes sense. 
-						if(eqep.getPosition() - cyltop < 350){
-							snprintf(g_stat, CMD_SIZ, "invalid retraction -- insufficient deceleration space, %d \n", eqep.getPosition() - cyltop); 
+						if(eqep.getPosition() - cyltop < 320){
+							snprintf(g_stat, CMD_SIZ, "invalid retraction -- insufficient deceleration space, %d \nmove done\n", eqep.getPosition() - cyltop); 
 						}else{
 							// we're going for it!!
 							cylbot = eqep.getPosition(); 
@@ -436,7 +448,7 @@ int main (int argc, char const *argv[])
 								update_velocity(n, 0.2);
 								if(t < 0.0075){
 									dr = 1.0; //compress the spring down; stop just before it maxes out
-								}else if(t < 0.0168 && x > 350 ){ //+ (j/3)*100
+								}else if(t < 0.0168 && x > 320 ){ //+ (j/3)*100
 									if(x > cylbot - cyltop) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
 									else dr = -0.1; //coast up
 								}else if(t < 0.035){
@@ -450,7 +462,7 @@ int main (int argc, char const *argv[])
 										dr = -0.4*friction; //retract(slowly)
 									}
 								}else{
-									dr = -0.7*friction; //hold (up)
+									dr = -0.75*friction; //hold (up)
 								}
 								motor_setDrive(dr); 
 								save_dat(); 
@@ -473,8 +485,13 @@ int main (int argc, char const *argv[])
 								}
 							}
 							fclose(dat_fd); 
+							motor_setDrive(0.0); //idle the motor.
 							snprintf(g_stat, CMD_SIZ, "move done \n"); 
 						}
+					}
+					else if(cmd[0] == 'I' && cmd[1] == 'd'){
+						motor_setDrive(0.0); //idle the motor.
+						snprintf(g_stat, CMD_SIZ, "move done \n"); 
 					}
 					else if(cmd[0] == 'Q' && cmd[1] == 't'){
 						g_die = true; 
