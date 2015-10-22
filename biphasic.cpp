@@ -410,7 +410,7 @@ int main (int argc, char const *argv[])
 		fprintf(dat_fd, "\n"); 
 		fflush(dat_fd); 
 		if(j%10000 == 0){
-			usleep(100000); 
+			usleep(140000); 
 			printf("."); 
 		}
 	}
