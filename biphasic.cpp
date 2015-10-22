@@ -453,14 +453,14 @@ int main (int argc, char const *argv[])
 									if(x > cylbot - cyltop) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
 									else dr = -0.1; //coast up
 								}else if(t < 0.035){
-									if(v < -50*200 && !stoplatch){
+									if(v < -70*200 && !stoplatch){
 										dr = -0.9 * (v + 50*200) / (600.0*200.0); 
 									}else{
 										if(!stoplatch){
 											stoppos = eqep.getPosition(); 
 											stoplatch = 1; 
 										}
-										dr = -0.4*friction; //retract(slowly)
+										dr = -0.5*friction; //retract(slowly)
 									}
 								}else{
 									dr = -0.75*friction; //hold (up)
