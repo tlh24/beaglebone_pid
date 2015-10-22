@@ -329,7 +329,7 @@ int main (int argc, char const *argv[])
 				float dt_ = t - t_vold;
 				v_ = (float)(x - x_old) / dt_; 
 				float lerp_ = (dt_ + 0.00002) / 0.0002; 
-				lerp_ = lerp_ > 2.0 ? 2.0 : lerp_; 
+				lerp_ = lerp_ > 4.0 ? 4.0 : lerp_; 
 				lerp_ *= lerp; 
 				v = lerp_*v_ + (1.0 - lerp_)*v; //simple fading-memory filter 
 					//(with semi-constant timeconstant at increasing update)
