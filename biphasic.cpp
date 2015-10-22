@@ -26,17 +26,22 @@
 #include <sys/stat.h>
 #include <sys/sysinfo.h>
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h> 
 #include <errno.h>
 #include <math.h>
 #include <string.h>
 
 #include "bbb-eqep.h"
+#include "sock.h"
 
 using std::cout;
 using std::endl;
 using std::cerr;
 using namespace BBB;
 
+bool g_die = false; 
 int	mem_fd; 
 uint16_t* pwm_addr = 0; 
 uint32_t* gpio_addr = 0; 
@@ -48,6 +53,13 @@ uint32_t saved[0x1000/4];
 
 static int latency_target_fd = -1;
 static int32_t latency_target_value = 0;
+
+int g_controlSock; //RX from controller.ml
+int g_statusSock; //TX to controller (e.g. 'done')
+struct sockaddr_in g_statusAddr;
+#define CMD_SIZ 5120
+static char g_cmdt[CMD_SIZ]; 
+static char g_stat[CMD_SIZ]; 
 
 //mmap is used as a general-purpose mechanism for accessing system registers from userspace.
 uint32_t* map_register(uint32_t base_addr, uint32_t len){
@@ -151,6 +163,18 @@ void cleanup(){
 	munmap(pwmss_addr, 0x1000); 
 	munmap(prcm_addr, 0x1000); 
 	close (mem_fd); 
+}
+
+void lock(){
+	set_latency_target(); 
+	/* lock all memory (prevent swapping) */
+	if (mlockall(MCL_CURRENT|MCL_FUTURE) == -1) {
+		perror("mlockall");
+		cleanup(); 
+		g_die = true; 
+	}
+}
+void unlock(){
 	munlockall();
 	/* close the latency_target_fd if it's open */
 	if (latency_target_fd >= 0)
@@ -161,6 +185,11 @@ int main (int argc, char const *argv[])
 {
 	struct timeval tv1, tv2;
 	uint32_t eqep_pos, eqep0_pos;
+	
+	// bidirectional socket communication. 
+	g_controlSock = setup_socket(4596); 
+	g_statusSock = connect_socket(4597,"mongolianbbq.local"); 
+	get_sockaddr(4597,"mongolianbbq.local",&g_statusAddr);
 	
 	mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
 	if (mem_fd < 0){
@@ -192,12 +221,6 @@ int main (int argc, char const *argv[])
 		printf(" .. looks OK\n"); 
 	printf("GPIO0_OE 0x%X\n", gpio_addr[0x134 / 4]); 
 	printf("GPIO0_DI 0x%X\n", gpio_addr[0x138 / 4]); 
-// 	for(int i=0; i<10000; i++){
-// 		gpio_addr[0x190 / 4] = 0x1 << 4; //clear data out
-// 		usleep(100); 
-// 		gpio_addr[0x194 / 4] = 0x1 << 4; //set data out
-// 		usleep(10); 
-// 	} 
 	
 	printf("TIMER4_TIDR 0x%X\n", timer_addr[0]);
 	printf("TIMER4_TIOCP_CFG 0x%X\n", timer_addr[0x10 / 4]);
@@ -270,33 +293,30 @@ int main (int argc, char const *argv[])
 	printf("timer1 clock rate %f Mhz\n", (float)timer1_s / ((float)dt_micros)); 
 	
 	//calibrate friction point. 
-	//slug starts at bottom.
-	int st = eqep.getPosition();
+	//slug must start at bottom.
 	float friction = 0.0; 
-	int dd = 0; 
-	while(dd > -250 && friction <= 0.1){
-		friction += 0.005; 
-		motor_setDrive(-1.0*friction); 
-		usleep(500000); 
-		dd = eqep.getPosition() - st; 
+	if(0){
+		int st = eqep.getPosition();
+		int dd = 0; 
+		friction = 0.0; 
+		while(dd > -250 && friction <= 0.1){
+			friction += 0.005; 
+			motor_setDrive(-1.0*friction); 
+			usleep(500000); 
+			dd = eqep.getPosition() - st; 
+		}
+		if(dd >= 0){
+			printf("Motor polarity looks reversed, %d.  Check your wiring.\n", dd); 
+			cleanup(); 
+			return 0; 
+		}
+		printf("measured friction point %f (%d)\n", friction, dd); 
+	}else{
+		friction = 0.045; // seems pretty consistent now.
 	}
-	if(dd >= 0){
-		printf("Motor polarity looks reversed, %d.  Check your wiring.\n", dd); 
-		cleanup(); 
-		return 0; 
-	}
-	printf("measured friction point %f (%d)\n", friction, dd); 
-	friction += 0.008; // a bit of margin.
-	motor_setDrive(-1.0*friction); 
-	sleep(1); 
-	int cyltop = eqep.getPosition();  //top of cylinder
-	motor_setDrive(friction); 
-	sleep(1); //drive to bottom. 
-	int cylbot = eqep.getPosition(); //bottom of cylinder, retract. 
-	printf("top of cylinder: %d bottom: %d delta: %d\n", cyltop, cylbot, cyltop-cylbot); 
+	friction += 0.005; // a bit of margin.
+
 	
-	//try a negative step ('up')
-	//full-speed acceleration to midpoint of trajectory. 
 	float t = 0.f; 
 	float td = 0.0; 
 	int x = 0; 
@@ -312,6 +332,8 @@ int main (int argc, char const *argv[])
 	float c = 1e9; 
 	int n = 0; 
 	int stoppos = 0; 
+	int cyltop = 0x3fffffff; 
+	int cylbot = 0x3fffffff; 
 	float* sav = (float*)malloc(sizeof(float) * 5 * 1e6); 
 		//20MB .. 1e6 samples: should be more than enough. 
 	int savn = 0; 
@@ -348,78 +370,137 @@ int main (int argc, char const *argv[])
 			savn++; 
 		}
 	};
-	/* lock all memory (prevent swapping) */
-	if (mlockall(MCL_CURRENT|MCL_FUTURE) == -1) {
-		perror("mlockall");
-		cleanup(); 
-		return 0; 
-	}
-	for(int j=0; j<3*10; j++){
-		timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR.
-		//the reload may take a little bit ...
-		int pt = get_time(); 
-		t = pt; 
-		while(t - pt >= 0.0){
-			update_velocity(0, 0.0);
-		}
-		n = 0; 
-		int stoplatch = 0; 
-		update_velocity(0, 0.0); //updates the time.
-		while(t < 0.08){
-			update_velocity(n, 0.2);
-			if(t < 0.0075){
-				dr = 1.0; //compress the spring down; stop just before it maxes out
-			}else if(t < 0.0168 && x > 350 ){ //+ (j/3)*100
-				if(x > cylbot - cyltop) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
-				else dr = -0.1; //coast up
-			}else if(t < 0.035){
-				if(v < -50*200 && !stoplatch){
-					dr = -0.9 * (v + 50*200) / (600.0*200.0); 
-				}else{
-					if(!stoplatch){
-						stoppos = eqep.getPosition(); 
-						stoplatch = 1; 
+	
+	//read in commands
+	while(!g_die){
+		bzero(g_cmdt, sizeof(g_cmdt)); 
+		int n = recvfrom(g_controlSock, g_cmdt, CMD_SIZ,0,0,0); 
+		if( n > 0 ){
+			unsigned int i = 0; 
+			char cmd[CMD_SIZ]; 
+			while(i<sizeof(g_cmdt) && g_cmdt[i]){
+				if(g_cmdt[i] >= 'A' && g_cmdt[i] <= 'z'){
+					printf("command from controller %s ... parsing\n",g_cmdt);
+					bool valid = true; 
+					memcpy(cmd, &g_cmdt[i], std::min(strlen(&g_cmdt[i]),(size_t)(CMD_SIZ-i-1))); 
+					// need to copy it - strtok modifies the string in-place. 
+					if((cmd[0] == 'U' && cmd[1] == 'p') || 
+						(cmd[0] == 'D' && cmd[1] == 'w')){
+						//drive the slug up -- gradually ramp up the torque, if it moves, 
+						//reply when it stops.  
+						float scl = 1.0;
+						if(cmd[0] == 'U') scl = -1.0; 
+						int sta = eqep.getPosition(); 
+						dr = scl * 0.4 * friction; 
+						while(dr*scl < friction){
+							dr += 0.005*scl; 
+							motor_setDrive(dr); 
+							usleep(200000); 
+						}
+						//see if it moved.  if so, wait (one sec max) for it to stop. 
+						if(eqep.getPosition() != sta){
+							for(int j=0; j<10; j++){
+								sta = eqep.getPosition(); 
+								usleep(100000); 
+								if(eqep.getPosition() == sta)
+									break; 
+							}
+						}
+						if(scl < 0.0){ //drove the slug up + wait; store the position.
+							cyltop = eqep.getPosition(); 
+						}
+						snprintf(g_stat, CMD_SIZ, "move done \n"); 
 					}
-					dr = -0.4*friction; //retract(slowly)
+					else if(cmd[0] == 'O' && cmd[1] == '!'){
+						//retract -- out!
+						//slug needs to be at bottom -- needle exposed / inserted.
+						//check if the move makes sense. 
+						if(eqep.getPosition() - cyltop < 350){
+							snprintf(g_stat, CMD_SIZ, "invalid retraction -- insufficient deceleration space, %d \n", eqep.getPosition() - cyltop); 
+						}else{
+							// we're going for it!!
+							cylbot = eqep.getPosition(); 
+							lock(); 
+							timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR.
+							//the reload may take a little bit ...
+							int pt = get_time(); 
+							t = pt; 
+							while(t - pt >= 0.0){
+								update_velocity(0, 0.0);
+							}
+							savn = 0; 
+							n = 0; 
+							int stoplatch = 0; 
+							update_velocity(0, 0.0); //updates the time, too.
+							while(t < 0.08){ //total retraction should take (much) less than 80ms.
+								update_velocity(n, 0.2);
+								if(t < 0.0075){
+									dr = 1.0; //compress the spring down; stop just before it maxes out
+								}else if(t < 0.0168 && x > 350 ){ //+ (j/3)*100
+									if(x > cylbot - cyltop) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
+									else dr = -0.1; //coast up
+								}else if(t < 0.035){
+									if(v < -50*200 && !stoplatch){
+										dr = -0.9 * (v + 50*200) / (600.0*200.0); 
+									}else{
+										if(!stoplatch){
+											stoppos = eqep.getPosition(); 
+											stoplatch = 1; 
+										}
+										dr = -0.4*friction; //retract(slowly)
+									}
+								}else{
+									dr = -0.7*friction; //hold (up)
+								}
+								motor_setDrive(dr); 
+								save_dat(); 
+								n++; 
+							}
+							unlock(); 
+							printf("writing out data record (%d)..", savn); 
+							FILE* dat_fd = fopen("/mnt/ramdisk/pid.dat", "w"); 
+							for(int j=0; j<savn; j++){
+								for(int k=0; k<5; k++){
+									fprintf(dat_fd, "%e\t", sav[j*5+k]); 
+								}
+								fprintf(dat_fd, "\n"); 
+								fflush(dat_fd); 
+								//this is a realtime process -- make sure the kernel has time to flush its buffers.
+								if(j%10000 == 0){
+									usleep(100000); 
+									printf("."); 
+									fflush(stdout);
+								}
+							}
+							fclose(dat_fd); 
+							snprintf(g_stat, CMD_SIZ, "move done \n"); 
+						}
+					}
+					else if(cmd[0] == 'Q' && cmd[1] == 't'){
+						g_die = true; 
+						snprintf(g_stat, CMD_SIZ, "quitting \n"); 
+					}
+					else {
+						snprintf(g_stat, CMD_SIZ, "unknown command \n"); 
+					}
+					if(g_statusSock > 0){
+						n = sendto(g_statusSock,g_stat,std::min((int)strlen(g_stat), CMD_SIZ-1), 0, 
+							(struct sockaddr*)&g_statusAddr, sizeof(g_statusAddr));
+						if (n < 0) 
+							printf("ERROR %d writing to Controller status socket\n",errno);
+						else printf("%s", g_stat); //echo. 
+					}
 				}
-			}else{
-				dr = -0.75*friction; //hold (up)
+				while(i < sizeof(g_cmdt) && g_cmdt[i] != '\n' && g_cmdt[i]) i++; 
+				i++; //move to one past the newline. 
 			}
-			motor_setDrive(dr); 
-			save_dat(); 
-			n++; 
+		} // end n > 0
+		else{
+			usleep(16000); //wait for another command.
 		}
-		//reset motor positon (should be no skipped counts; motion is slow)
-		motor_setDrive(-1.0*friction); 
-		sleep(1); 
-		int newtop = eqep.getPosition(); //all the way retracted.
-		printf("# stopped at %d, top measured at %d, delta %d\n", stoppos, newtop, stoppos - newtop);  
-		printf("top  %d was %d ; ", newtop, cyltop); 
-		cyltop = newtop; 
-		motor_setDrive(friction); 
-		sleep(1); 
-		printf("bottom  %d was %d\n", eqep.getPosition(), cylbot); 
-		cylbot = eqep.getPosition();
-	}
-	//unlock all memory, reinstate DMA (apparently, needed for writing to disk)
+	} //end while
 	cleanup(); 
-	printf("writing out data record (%d)..\n", savn); 
-	FILE* dat_fd = fopen("/mnt/ramdisk/pid.dat", "w"); 
-	for(int j=0; j<savn; j++){
-		for(int k=0; k<5; k++){
-			fprintf(dat_fd, "%e\t", sav[j*5+k]); 
-		}
-		fprintf(dat_fd, "\n"); 
-		fflush(dat_fd); 
-		//this is a realtime process -- make sure the kernel has time to flush it's buffers.
-		if(j%10000 == 0){
-			usleep(100000); 
-			printf("."); 
-			fflush(stdout);
-		}
-	}
-	fclose(dat_fd); 
 	free(sav); 
-	printf(" done\n"); 
+	close_socket(g_controlSock); 
 	return 0;
 }

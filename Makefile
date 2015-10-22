@@ -1,6 +1,6 @@
 # simplified makefile. 
 
-OBJS = bbb-eqep.o biphasic.o 
+OBJS = bbb-eqep.o sock.o biphasic.o
 
 all: pid_tst
 
