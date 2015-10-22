@@ -348,6 +348,7 @@ int main (int argc, char const *argv[])
 	int cylbot = 0x3fffffff; 
 	float* sav = (float*)malloc(sizeof(float) * 5 * 1e6); 
 		//20MB .. 1e6 samples: should be more than enough. 
+	int totalWrite = 0; 
 	int savn = 0; 
 	auto update_velocity = [&] (int nn, float lerp) -> void {
 		float t1 = get_time(); 
@@ -455,7 +456,7 @@ int main (int argc, char const *argv[])
 									else dr = -0.1; //coast up
 								}else if(t < 0.035){
 									if(v < -70*200 && !stoplatch){
-										dr = -0.9 * (v + 50*200) / (600.0*200.0); 
+										dr = -0.9 * (v + 70*200) / (600.0*200.0); 
 									}else{
 										if(!stoplatch){
 											stoppos = eqep.getPosition(); 
@@ -472,13 +473,14 @@ int main (int argc, char const *argv[])
 							}
 							unlock(); 
 							printf("writing out data record (%d)..", savn); 
-							FILE* dat_fd = fopen("/mnt/ramdisk/pid.dat", "w"); 
-							for(int j=0; j<savn; j++){
+							FILE* dat_fd = fopen("/mnt/ramdisk/pid.dat", "a"); 
+							for(int j=0; j<savn; totalWrite<9e5; j++){
 								for(int k=0; k<5; k++){
 									fprintf(dat_fd, "%e\t", sav[j*5+k]); 
 								}
 								fprintf(dat_fd, "\n"); 
 								fflush(dat_fd); 
+								totalWrite++; //to keep from overflowing the ramdisk.
 								//this is a realtime process -- make sure the kernel has time to flush its buffers.
 								if(j%10000 == 0){
 									usleep(100000); 
