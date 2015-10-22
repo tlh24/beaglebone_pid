@@ -374,7 +374,7 @@ int main (int argc, char const *argv[])
 				else dr = -0.1; //coast up
 			}else if(t < 0.03){
 				if(v < -100*200){
-					dr = -0.7 * v / (600.0*200.0); 
+					dr = -0.8 * v / (600.0*200.0); 
 				}else{
 					if(stoppos <= -100000)
 						stoppos = eqep.getPosition(); 
@@ -402,8 +402,8 @@ int main (int argc, char const *argv[])
 	//unlock all memory, reinstate DMA (apparently, needed for writing to disk)
 	cleanup(); 
 	printf("writing out data record (%d)..\n", savn); 
-	FILE* dat_fd = fopen("pid.dat", "w"); 
-	for(int j=0; j<savn && j < 2e5; j++){
+	FILE* dat_fd = fopen("/mnt/ramdisk/pid.dat", "w"); 
+	for(int j=0; j<savn; j++){
 		for(int k=0; k<5; k++){
 			fprintf(dat_fd, "%e\t", sav[j*5+k]); 
 		}
