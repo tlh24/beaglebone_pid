@@ -432,6 +432,9 @@ int main (int argc, char const *argv[])
 							snprintf(g_stat, CMD_SIZ, "invalid retraction -- insufficient deceleration space, %d \nmove done\n", eqep.getPosition() - cyltop); 
 							//don't change the drive.
 						}else{
+							printf("deceleration space %d\n" eqep.getPosition() - cyltop);
+							fflush(stdout); 
+							usleep(50000); 
 							// we're going for it!!
 							cylbot = eqep.getPosition(); 
 							lock(); 
@@ -448,7 +451,7 @@ int main (int argc, char const *argv[])
 							update_velocity(0, 0.0); //updates the time, too.
 							while(t < 0.1){ //total retraction should take (much) less than 100ms.
 								update_velocity(n, 0.2);
-								if(t < 0.0075){
+								if(t < 0.0067){
 									dr = 1.0; //compress the spring down; stop just before it maxes out
 								}else if(t < 0.0168 && x > 390 ){ //+ (j/3)*100
 									//drive up, but stop if too close to cyltop.
@@ -465,7 +468,7 @@ int main (int argc, char const *argv[])
 										dr = -0.5*friction; //retract(slowly)
 									}
 								}else{
-									dr = -0.75*friction; //hold (up)
+									dr = -0.7*friction; //hold (up)
 								}
 								motor_setDrive(dr); 
 								save_dat(); 
@@ -489,7 +492,7 @@ int main (int argc, char const *argv[])
 								}
 							}
 							fclose(dat_fd); 
-							motor_setDrive(-0.5*friction);
+							motor_setDrive(-0.7*friction);
 							snprintf(g_stat, CMD_SIZ, "move done \n"); 
 						}
 					}
