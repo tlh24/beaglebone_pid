@@ -373,15 +373,15 @@ int main (int argc, char const *argv[])
 				if(x > cylbot - cyltop) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
 				else dr = -0.1; //coast up
 			}else if(t < 0.03){
-				if(v < -100*200){
+				if(v < -75*200){
 					dr = -0.8 * v / (600.0*200.0); 
 				}else{
 					if(stoppos <= -100000)
 						stoppos = eqep.getPosition(); 
-					dr = -0.8*friction; //retract(slowly)
+					dr = -0.7*friction; //retract(slowly)
 				}
 			}else{
-				dr = -0.9*friction; //hold (up)
+				dr = -0.8*friction; //hold (up)
 			}
 			motor_setDrive(dr); 
 			save_dat(); 
@@ -409,13 +409,15 @@ int main (int argc, char const *argv[])
 		}
 		fprintf(dat_fd, "\n"); 
 		fflush(dat_fd); 
+		//this is a realtime process -- make sure the kernel has time to flush it's buffers.
 		if(j%10000 == 0){
-			usleep(140000); 
+			usleep(100000); 
 			printf("."); 
+			fflush(stdout);
 		}
 	}
 	fclose(dat_fd); 
 	free(sav); 
-	printf("\t.. done\n"); 
+	printf(" done\n"); 
 	return 0;
 }
