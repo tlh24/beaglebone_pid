@@ -18,12 +18,14 @@ hold on;
 s = 1; 
 for i = 1:length(ends)
     e = ends(i); 
-% 	 figure
+	 fig = figure;
+	 set (fig, 'Units', 'normalized', 'Position', [0,0,1,1]);
     plot(t(s:e-1), dt(s:e-1)*24e6, 'm'); 
-% 	 hold on
-    plot(t(s:e), v_(s:e)/200, 'g'); 
+	 hold on
+%     plot(t(s:e), v_(s:e)/200, 'g'); 
     plot(t(s:e), v(s:e)/200, 'b'); 
     plot(t(s:e), x(s:e), 'k'); 
     plot(t(s:e), dr(s:e)*1000, 'r'); 
+	 axis([0, 0.1, -1200, 1500])
     s = e+1; 
 end

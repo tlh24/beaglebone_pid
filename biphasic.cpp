@@ -451,15 +451,15 @@ int main (int argc, char const *argv[])
 							update_velocity(0, 0.0); //updates the time, too.
 							while(t < 0.1){ //total retraction should take (much) less than 100ms.
 								update_velocity(n, 0.2);
-								if(t < 0.0067){
+								if(t < 0.0066){
 									dr = 1.0; //compress the spring down; stop just before it maxes out
 								}else if(t < 0.0168 && x > 390 ){ //+ (j/3)*100
 									//drive up, but stop if too close to cyltop.
 									if(x > cylbot - cyltop && x > 800) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
 									else dr = -0.1; //coast up
 								}else if(t < 0.035){
-									if(v < -70*200 && !stoplatch){
-										dr = -0.9 * (v + 70*200) / (600.0*200.0); 
+									if(v < -50*200 && !stoplatch){
+										dr = -1.0 * (v + 40*200) / (600.0*200.0); 
 									}else{
 										if(!stoplatch){
 											stoppos = eqep.getPosition(); 
