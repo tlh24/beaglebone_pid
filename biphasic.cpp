@@ -409,13 +409,13 @@ int main (int argc, char const *argv[])
 						while(dr*scl < friction){
 							dr += 0.005*scl; 
 							motor_setDrive(dr); 
-							usleep(200000); 
+							usleep(50000); 
 						}
 						//see if it moved.  if so, wait (one sec max) for it to stop. 
 						if(eqep.getPosition() != sta){
 							for(int j=0; j<10; j++){
 								sta = eqep.getPosition(); 
-								usleep(100000); 
+								usleep(50000); 
 								if(eqep.getPosition() == sta)
 									break; 
 							}
@@ -460,7 +460,7 @@ int main (int argc, char const *argv[])
 									else dr = -0.1; //coast up
 								}else if(t < 0.035){
 									if(v < -75*200 && !stoplatch){
-										dr = -1.0 * (v + 60*200) / (600.0*200.0); 
+										dr = -1.0 * (v + 30*200) / (600.0*200.0); 
 									}else{
 										if(!stoplatch){
 											stoppos = eqep.getPosition(); 
