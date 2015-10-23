@@ -465,7 +465,9 @@ int main (int argc, char const *argv[])
 									else dr = -0.1; //coast up
 								}else if(t < 0.035){
 									if(v < -40*200 && !stoplatch){
-										dr = -1.1 * (v + 30*200) / (600.0*200.0); 
+										float dscl = -1.1; 
+										if(decel > 800) dscl += 0.1 * (decel - 800)/500.0; 
+										dr = dscl * (v + 30*200) / (600.0*200.0); 
 									}else{
 										if(!stoplatch){
 											stoppos = eqep.getPosition(); 
