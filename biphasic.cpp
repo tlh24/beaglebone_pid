@@ -430,7 +430,7 @@ int main (int argc, char const *argv[])
 						//retract -- out!
 						//slug needs to be at bottom -- needle exposed / inserted.
 						//check if the move makes sense. 
-						if(eqep.getPosition() - cyltop < 350){
+						if(eqep.getPosition() - cyltop < 300){
 							snprintf(g_stat, CMD_SIZ, "invalid retraction -- insufficient deceleration space, %d \nmove done\n", eqep.getPosition() - cyltop); 
 							//don't change the drive.
 						}else{
@@ -459,7 +459,7 @@ int main (int argc, char const *argv[])
 								if(t < 0.0065){
 									dr = 1.0; //compress the spring down; stop just before it maxes out
 								}else if(t < 0.0168 && 
-									(float)x > (350.0 + (decel2-350)*0.35) ){ //
+									(float)x > (300.0 + (decel2-350)*0.35) ){ //
 									//drive up, but stop if too close to cyltop.
 									if(x > cylbot - cyltop && x > 800) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
 									else dr = -0.1; //coast up
