@@ -153,7 +153,7 @@ static void set_latency_target(void){
 		close(latency_target_fd);
 		return;
 	}
-	printf("# /dev/cpu_dma_latency set to %dus\n", latency_target_value);
+	//printf("# /dev/cpu_dma_latency set to %dus\n", latency_target_value);
 }
 
 void cleanup(){
@@ -359,8 +359,9 @@ int main (int argc, char const *argv[])
 			x_old = x; 
 			t_vold = t; 
 		}else{
-			if(x != x_old){
+			if(x != x_old || t - t_old > 0.0007){
 				//update the velocity. 
+				//700us timeout on this (decay velocity if the motor is stopped)
 				float dt_ = t - t_vold;
 				v_ = (float)(x - x_old) / dt_; 
 				float lerp_ = (dt_ + 0.00002) / 0.0002; 
@@ -451,15 +452,15 @@ int main (int argc, char const *argv[])
 							update_velocity(0, 0.0); //updates the time, too.
 							while(t < 0.1){ //total retraction should take (much) less than 100ms.
 								update_velocity(n, 0.2);
-								if(t < 0.0066){
+								if(t < 0.0065){
 									dr = 1.0; //compress the spring down; stop just before it maxes out
 								}else if(t < 0.0168 && x > 390 ){ //+ (j/3)*100
 									//drive up, but stop if too close to cyltop.
-									if(x > cylbot - cyltop && x > 800) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
+									if(x > cylbot - cyltop && x > 700) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
 									else dr = -0.1; //coast up
 								}else if(t < 0.035){
-									if(v < -50*200 && !stoplatch){
-										dr = -1.0 * (v + 40*200) / (600.0*200.0); 
+									if(v < -75*200 && !stoplatch){
+										dr = -1.0 * (v + 60*200) / (600.0*200.0); 
 									}else{
 										if(!stoplatch){
 											stoppos = eqep.getPosition(); 
