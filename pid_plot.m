@@ -6,7 +6,7 @@ v = pid(:,3);
 v_ = pid(:,4); 
 dr = pid(:,5); 
 
-separate = 1;
+separate = 0;
 
 %need to break into segments.  
 dt = diff(t); 

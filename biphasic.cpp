@@ -430,11 +430,14 @@ int main (int argc, char const *argv[])
 						//retract -- out!
 						//slug needs to be at bottom -- needle exposed / inserted.
 						//check if the move makes sense. 
-						if(eqep.getPosition() - cyltop < 390){
+						if(eqep.getPosition() - cyltop < 350){
 							snprintf(g_stat, CMD_SIZ, "invalid retraction -- insufficient deceleration space, %d \nmove done\n", eqep.getPosition() - cyltop); 
 							//don't change the drive.
 						}else{
-							printf("deceleration space %d\n", eqep.getPosition() - cyltop);
+							int decel = eqep.getPosition() - cyltop; 
+							int decel2 = decel > 800 ? 800 : decel; 
+							//above 800 counts, energy of acceleration is the same. 
+							printf("deceleration space %d\n", decel);
 							fflush(stdout); 
 							usleep(50000); 
 							// we're going for it!!
@@ -455,9 +458,10 @@ int main (int argc, char const *argv[])
 								update_velocity(n, 0.2);
 								if(t < 0.0065){
 									dr = 1.0; //compress the spring down; stop just before it maxes out
-								}else if(t < 0.0168 && x > 390 ){ //+ (j/3)*100
+								}else if(t < 0.0168 && 
+									(float)x > (350.0 + (decel2-350)*0.35) ){ //
 									//drive up, but stop if too close to cyltop.
-									if(x > cylbot - cyltop && x > 760) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
+									if(x > cylbot - cyltop && x > 800) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
 									else dr = -0.1; //coast up
 								}else if(t < 0.035){
 									if(v < -40*200 && !stoplatch){
