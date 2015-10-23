@@ -360,7 +360,7 @@ int main (int argc, char const *argv[])
 			x_old = x; 
 			t_vold = t; 
 		}else{
-			if(x != x_old || t - t_old > 0.0007){
+			if(x != x_old || t - t_old > 0.001){
 				//update the velocity. 
 				//700us timeout on this (decay velocity if the motor is stopped)
 				float dt_ = t - t_vold;
@@ -460,8 +460,8 @@ int main (int argc, char const *argv[])
 									if(x > cylbot - cyltop && x > 760) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
 									else dr = -0.1; //coast up
 								}else if(t < 0.035){
-									if(v < -75*200 && !stoplatch){
-										dr = -1.0 * (v + 30*200) / (600.0*200.0); 
+									if(v < -40*200 && !stoplatch){
+										dr = -1.1 * (v + 30*200) / (600.0*200.0); 
 									}else{
 										if(!stoplatch){
 											stoppos = eqep.getPosition(); 
@@ -520,6 +520,7 @@ int main (int argc, char const *argv[])
 						fclose(dat_fd); 
 						motor_setDrive(-0.7*friction);
 						do_write = false; 
+						printf(" done.\n"); 
 					}
 				}
 				while(i < sizeof(g_cmdt) && g_cmdt[i] != '\n' && g_cmdt[i]) i++; 
