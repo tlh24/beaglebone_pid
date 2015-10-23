@@ -446,9 +446,11 @@ int main (int argc, char const *argv[])
 							timer_addr[0x44 / 4] = 0xffffffff; //reload (zero) the TCRR from the TLDR.
 							//the reload may take a little bit ...
 							int pt = get_time(); 
-							t = pt; 
-							while(t - pt >= 0.0 && !g_die){
-								update_velocity(0, 0.0);
+							if(pt >= 0.1){ //has not reset yet.
+								t = pt; 
+								while(t - pt >= 0.0 && !g_die){
+									update_velocity(0, 0.0);
+								}
 							}
 							savn = 0; 
 							n = 0; 
