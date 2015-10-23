@@ -350,6 +350,7 @@ int main (int argc, char const *argv[])
 		//20MB .. 1e6 samples: should be more than enough. 
 	int totalWrite = 0; 
 	int savn = 0; 
+	bool do_write = false; 
 	auto update_velocity = [&] (int nn, float lerp) -> void {
 		float t1 = get_time(); 
 		x = eqep.getPosition() - cyltop;
@@ -456,7 +457,7 @@ int main (int argc, char const *argv[])
 									dr = 1.0; //compress the spring down; stop just before it maxes out
 								}else if(t < 0.0168 && x > 390 ){ //+ (j/3)*100
 									//drive up, but stop if too close to cyltop.
-									if(x > cylbot - cyltop && x > 700) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
+									if(x > cylbot - cyltop && x > 760) dr = -1.0; //drive up.  near peak velocity @ crossing (when the slug will hit the actuator rod anyway)
 									else dr = -0.1; //coast up
 								}else if(t < 0.035){
 									if(v < -75*200 && !stoplatch){
@@ -478,24 +479,7 @@ int main (int argc, char const *argv[])
 							unlock(); 
 							printf("deceleration margin %d\n", stoppos-eqep.getPosition());  
 							cyltop = eqep.getPosition(); 
-							printf("writing out data record (%d)..", savn); 
-							FILE* dat_fd = fopen("/mnt/ramdisk/pid.dat", "a"); 
-							for(int j=0; j<savn && totalWrite<9e5; j++){
-								for(int k=0; k<5; k++){
-									fprintf(dat_fd, "%e\t", sav[j*5+k]); 
-								}
-								fprintf(dat_fd, "\n"); 
-								fflush(dat_fd); 
-								totalWrite++; //to keep from overflowing the ramdisk.
-								//this is a realtime process -- make sure the kernel has time to flush its buffers.
-								if(j%10000 == 0){
-									usleep(100000); 
-									printf("."); 
-									fflush(stdout);
-								}
-							}
-							fclose(dat_fd); 
-							motor_setDrive(-0.7*friction);
+							do_write = true; 
 							snprintf(g_stat, CMD_SIZ, "move done \n"); 
 						}
 					}
@@ -516,6 +500,26 @@ int main (int argc, char const *argv[])
 						if (n < 0) 
 							printf("ERROR %d writing to Controller status socket\n",errno);
 						else printf("%s", g_stat); //echo. 
+					}
+					if(do_write){
+						//do it here, in parallel with work on host computer..
+						printf("writing out data record (%d)  ", savn); 
+						FILE* dat_fd = fopen("/mnt/ramdisk/pid.dat", "a"); 
+						for(int j=0; j<savn && totalWrite<9e5; j++){
+							fprintf(dat_fd, "%e\t%e\t%e\t%e\t%e\n", 
+								sav[j*5+0],sav[j*5+1],sav[j*5+2],sav[j*5+3],sav[j*5+4]); 
+							fflush(dat_fd); 
+							totalWrite++; //to keep from overflowing the ramdisk.
+							//this is a realtime process -- make sure the kernel has time to flush its buffers.
+							if(j%10000 == 9999){
+								usleep(100000); 
+								printf("."); 
+								fflush(stdout);
+							}
+						}
+						fclose(dat_fd); 
+						motor_setDrive(-0.7*friction);
+						d_write = false; 
 					}
 				}
 				while(i < sizeof(g_cmdt) && g_cmdt[i] != '\n' && g_cmdt[i]) i++; 
