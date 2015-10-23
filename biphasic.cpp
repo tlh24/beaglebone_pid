@@ -519,7 +519,7 @@ int main (int argc, char const *argv[])
 						}
 						fclose(dat_fd); 
 						motor_setDrive(-0.7*friction);
-						d_write = false; 
+						do_write = false; 
 					}
 				}
 				while(i < sizeof(g_cmdt) && g_cmdt[i] != '\n' && g_cmdt[i]) i++; 
