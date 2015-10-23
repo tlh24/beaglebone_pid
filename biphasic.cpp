@@ -346,8 +346,8 @@ int main (int argc, char const *argv[])
 	int stoppos = 0; 
 	int cyltop = 0x3fffffff; 
 	int cylbot = 0x3fffffff; 
-	float* sav = (float*)malloc(sizeof(float) * 5 * 1e6); 
-		//20MB .. 1e6 samples: should be more than enough. 
+	float* sav = (float*)malloc(sizeof(float) * 5 * 5e5); 
+		//10MB .. 5e5 samples: should be more than enough. 
 	int totalWrite = 0; 
 	int savn = 0; 
 	bool do_write = false; 
@@ -376,7 +376,7 @@ int main (int argc, char const *argv[])
 		}
 	};
 	auto save_dat = [&] () -> void {
-		if(savn < 1e6 && sav){
+		if(savn < 5e5 && sav){
 			sav[savn*5+0] = t; 
 			sav[savn*5+1] = (float)x; 
 			sav[savn*5+2] = v; 
@@ -423,6 +423,8 @@ int main (int argc, char const *argv[])
 						}
 						if(scl < 0.0){ //drove the slug up + wait; store the position.
 							cyltop = eqep.getPosition(); 
+						}else{
+							printf("Cylinder bottom at %d\n", eqep.getPosition() - cyltop); 
 						}
 						snprintf(g_stat, CMD_SIZ, "move done \n"); 
 					}
@@ -468,7 +470,8 @@ int main (int argc, char const *argv[])
 								}else if(t < 0.035){
 									if(v < -40*200 && !stoplatch){
 										float dscl = -1.1; 
-										if(decel > 800) dscl += 0.1 * (decel - 800)/350.0; 
+										int ddecel = decel > 1250 ? 1250 : decel; 
+										if(decel > 800) dscl += 0.1 * (decel - 800)/280.0; 
 										dr = dscl * (v + 30*200) / (600.0*200.0); 
 									}else{
 										if(!stoplatch){
@@ -481,7 +484,11 @@ int main (int argc, char const *argv[])
 									dr = -0.8*friction; //hold (up)
 								}
 								motor_setDrive(dr); 
-								save_dat(); 
+								if(t < 0.030){
+									save_dat();
+								} else {
+									if(n % 4 == 0) save_dat();
+								}
 								n++; 
 							}
 							unlock(); 
@@ -513,7 +520,7 @@ int main (int argc, char const *argv[])
 						//do it here, in parallel with work on host computer..
 						printf("writing out data record (%d)  ", savn); 
 						FILE* dat_fd = fopen("/mnt/ramdisk/pid.dat", "a"); 
-						for(int j=0; j<savn && totalWrite<9e5; j++){
+						for(int j=0; j<savn && totalWrite<9.5e5; j++){
 							fprintf(dat_fd, "%e\t%e\t%e\t%e\t%e\n", 
 								sav[j*5+0],sav[j*5+1],sav[j*5+2],sav[j*5+3],sav[j*5+4]); 
 							fflush(dat_fd); 
