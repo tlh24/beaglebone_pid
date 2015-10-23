@@ -16,6 +16,7 @@ if numel(ends) == 0
 	ends = length(t); 
 end
 if separate == 0
+	hold off; 
 	plot(0,0); 
 	hold on;
 end
@@ -32,10 +33,10 @@ for i = 1:length(ends)
 		 plot(t(s:e), dr(s:e)*1000, 'r'); 
 		  plot(t(s:e), x(s:e), 'k'); 
 	 else
-		 plot(t(s:e), v(s:e)/200, 'b'); 
-		 plot(t(s:e), dr(s:e)*1000, 'r'); 
+% 		 plot(t(s:e), v(s:e)/200, 'b'); 
+% 		 plot(t(s:e), dr(s:e)*1000, 'r'); 
 		 plot(t(s:e), x(s:e), 'k'); 
 	 end
-	 axis([0, 0.1, -1200, 1500])
+	 axis([0, 0.1, -1200, 1800])
     s = e+1; 
 end
