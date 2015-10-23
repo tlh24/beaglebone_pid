@@ -456,7 +456,7 @@ int main (int argc, char const *argv[])
 							update_velocity(0, 0.0); //updates the time, too.
 							while(t < 0.1  && !g_die){ //total retraction should take (much) less than 100ms.
 								update_velocity(n, 0.2);
-								if(t < 0.0065){
+								if(t < 0.0065){ 
 									dr = 1.0; //compress the spring down; stop just before it maxes out
 								}else if(t < 0.0168 && 
 									(float)x > (300.0 + (decel2-350)*0.35) ){ //
