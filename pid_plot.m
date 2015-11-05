@@ -34,16 +34,19 @@ if separate == 1
 		  plot(t(s:e), x(s:e), 'k'); 
 	end
 else
+	s=1; 
 	for i = 1:length(ends)
 		 e = ends(i); 
 		 plot(t(s:e), v(s:e)/200, 'b');
 		 s = e+1; 
 	end
+	s=1; 
 	for i = 1:length(ends)
 		 e = ends(i); 
 		 plot(t(s:e), dr(s:e)*1000, 'r');
 		 s = e+1; 
 	end
+	s=1; 
 	for i = 1:length(ends)
 		 e = ends(i); 
 		 plot(t(s:e), x(s:e), 'k'); 
@@ -53,8 +56,8 @@ else
 	q(1) = text(0.04, 1500, 'black = motor / slug position (encoder counts)');
 	q(2) = text(0.04, 1400, 'red = motor drive (1000 = DC)');
 	q(3) = text(0.04, 1300, 'blue = estimated velocity, arb units');
-	q(4) = text(0.04, 1200, 'simlulated insertions spaced at 300\mum');
-	for k = 1:4 
+% 	q(4) = text(0.04, 1200, 'simlulated insertions spaced at 300\mum');
+	for k = 1:3
 		q(k).FontSize = 14; 
 	end
 end

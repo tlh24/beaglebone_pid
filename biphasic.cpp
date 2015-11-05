@@ -422,7 +422,8 @@ int main (int argc, char const *argv[])
 							}
 						}
 						if(scl < 0.0){ //drove the slug up + wait; store the position.
-							cyltop = eqep.getPosition(); 
+							cyltop = eqep.getPosition();
+							printf("Cylinder top at %d\n", cyltop);
 						}else{
 							printf("Cylinder bottom at %d\n", eqep.getPosition() - cyltop); 
 						}
