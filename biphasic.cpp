@@ -193,8 +193,8 @@ int main (int argc, char const *argv[])
 	
 	// bidirectional socket communication. 
 	g_controlSock = setup_socket(4596); 
-	g_statusSock = connect_socket(4597,"mongolianbbq.local"); 
-	get_sockaddr(4597,"mongolianbbq.local",&g_statusAddr);
+	g_statusSock = connect_socket(4597,"screwtape.local"); 
+	get_sockaddr(4597,"screwtape.local",&g_statusAddr);
 	
 	// sig hangler for control-C (sigint)
 	struct sigaction sigIntHandler;
@@ -324,7 +324,7 @@ int main (int argc, char const *argv[])
 		}
 		printf("measured friction point %f (%d)\n", friction, dd); 
 	}else{
-		friction = 0.045; // seems pretty consistent now.
+		friction = 0.06; // seems pretty consistent now.
 	}
 	friction += 0.005; // a bit of margin.
 
