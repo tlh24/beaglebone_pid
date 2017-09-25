@@ -324,7 +324,7 @@ int main (int argc, char const *argv[])
 		}
 		printf("measured friction point %f (%d)\n", friction, dd); 
 	}else{
-		friction = 0.06; // seems pretty consistent now.
+		friction = 0.08; // seems pretty consistent now.
 	}
 	friction += 0.005; // a bit of margin.
 
