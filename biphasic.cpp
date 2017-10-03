@@ -495,7 +495,7 @@ int main (int argc, char const *argv[])
 							unlock(); 
 							printf("deceleration margin %d\n", stoppos-eqep.getPosition());  
 							cyltop = eqep.getPosition(); 
-							do_write = true; 
+							do_write = false; //true for debug!
 							snprintf(g_stat, CMD_SIZ, "move done \n"); 
 						}
 					}
