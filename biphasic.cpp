@@ -401,18 +401,17 @@ int main (int argc, char const *argv[])
 					// need to copy it - strtok modifies the string in-place. 
 					if((cmd[0] == 'U' && cmd[1] == 'p') || 
 						(cmd[0] == 'D' && cmd[1] == 'w')){
-						//drive the slug up -- gradually ramp up the torque, if it moves, 
-						//reply when it stops.  
+						//drive the slug up -- start with high torque, decay. 
 						float scl = 1.0;
 						if(cmd[0] == 'U') scl = -1.0; 
 						int sta = eqep.getPosition(); 
-						dr = scl * 0.4 * friction; 
-						while(dr*scl < friction){
-							dr += 0.005*scl; 
+						dr = scl * 2.0 * friction; 
+						while(dr*scl > friction * 0.5){
+							dr -= 0.005*scl; 
 							motor_setDrive(dr); 
 							usleep(50000); 
 						}
-						//see if it moved.  if so, wait (one sec max) for it to stop. 
+						//see if it moved.  if so, wait (half sec max) for it to stop. 
 						if(eqep.getPosition() != sta){
 							for(int j=0; j<10; j++){
 								sta = eqep.getPosition(); 
