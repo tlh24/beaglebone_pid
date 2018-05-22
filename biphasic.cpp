@@ -406,8 +406,8 @@ int main (int argc, char const *argv[])
 						if(cmd[0] == 'U') scl = -1.0; 
 						int sta = eqep.getPosition(); 
 						dr = scl * 1.5 * friction; 
-						while(dr*scl > friction * 0.5){
-							dr -= 0.005*scl; 
+						while(dr*scl > friction){
+							dr -= 0.0025*scl; 
 							motor_setDrive(dr); 
 							usleep(50000); 
 						}
