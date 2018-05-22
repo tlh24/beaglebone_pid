@@ -193,8 +193,8 @@ int main (int argc, char const *argv[])
 	
 	// bidirectional socket communication. 
 	g_controlSock = setup_socket(4596); 
-	g_statusSock = connect_socket(4597,"screwtape.local"); 
-	get_sockaddr(4597,"screwtape.local",&g_statusAddr);
+	g_statusSock = connect_socket(4597,"192.168.1.1"); 
+	get_sockaddr(4597,"192.168.1.1",&g_statusAddr);
 	
 	// sig hangler for control-C (sigint)
 	struct sigaction sigIntHandler;

@@ -1,5 +1,5 @@
 #!/bin/bash
-sudo rm -f /mnt/ramdisk/pid.dat
+# sudo rm -f /mnt/ramdisk/pid.dat
 # git pull
 # make
 sudo chrt -f 99 /home/debian/bbpid/pid_tst
